@@ -30,7 +30,8 @@ class Client(object):
             "apparent_power": [],
             "production_power": [],
             "total_production_power": [],
-            "error_code": []
+            "error_code": [],
+            "total_charged_energy": []
         }
         try:
             out["grid_power"] = self.get_grid_power()
@@ -41,6 +42,7 @@ class Client(object):
             out["production_power"] = self.get_production_power()
             out["total_production_power"] = self.get_total_production_power()
             out["error_code"] = self.get_error_code()
+            out["total_charged_energy"] = self.get_total_charged_energy()
         except:
             pass
 
@@ -172,4 +174,27 @@ class Client(object):
             pass
 
         self.modbus_client.close()
+        return res
+
+    def get_total_charged_energy(self):
+        try:
+            self.connect()
+            rr_low = self.modbus_client.read_holding_registers(1069, 1, unit=255)
+            if not rr_low.isError():
+                res_low = BinaryPayloadDecoder.fromRegisters(
+                    rr_low.registers, Endian.Big, Endian.Little
+                ).decode_16bit_uint()
+
+            rr_high = self.modbus_client.read_holding_registers(1070, 1, unit=255)
+            if not rr_high.isError():
+                res_high = BinaryPayloadDecoder.fromRegisters(
+                    rr_high.registers, Endian.Big, Endian.Little
+                ).decode_16bit_uint()
+        except:
+            pass
+
+        self.modbus_client.close()
+
+        res = ((res_high << 16) | (res_low & 0xFFFF))/1000
+
         return res
