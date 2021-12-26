@@ -1,6 +1,6 @@
-from setuptools import setup, find_packages
+import setuptools
 
-setup(
+setuptools.setup(
     name="vartastorage",
     version="0.1.0",
     description="VARTA Battery",
@@ -8,7 +8,8 @@ setup(
     author="edAndy",
     author_email="an-dy@gmx.de",
     license="APACHE",
-    packages=['vartastorage'],
+    package_dir={"": "src"},
+    packages=setuptools.find_packages(where="src"),
     zip_safe=False,
     install_requires=[
         "pymodbus",
