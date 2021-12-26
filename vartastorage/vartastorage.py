@@ -2,7 +2,8 @@
 
 from datetime import datetime
 
-from vartastorage.modbus_client import Client
+from vartastorage.client import Client
+
 
 class VartaStorage(object):
     def __init__(self, modbus_host, modbus_port):
@@ -11,20 +12,20 @@ class VartaStorage(object):
 
     def get_all_data(self):
         # get all known registers
-
         data = self.client.get_all_data()
         self.grid_power = data["grid_power"]
-        self.calculate_to_from_grid() #create dedicated properties (grid consumption and grid supply)
+        self.calculate_to_from_grid()  # create dedicated properties (grid consumption and grid supply)
         self.soc = data["soc"]
         self.state = data["state"]
-        self.interpret_state() # interpret state value into a human readbale string
+        self.interpret_state()  # interpret state value into a human readbale string
         self.active_power = data["active_power"]
-        self.calculate_charge_discharge() #create dedicated properties for charge and discharge
+        self.calculate_charge_discharge()  # create dedicated properties for charge and discharge
         self.apparent_power = data["apparent_power"]
         self.production_power = data["production_power"]
         self.total_production_power = data["total_production_power"]
         self.error_code = data["error_code"]
         self.total_charged_energy = data["total_charged_energy"]
+        self.serial = data["serial"]
 
     def get_grid_power(self):
         # grid power in Watt; measured at household grid connection point
@@ -68,7 +69,7 @@ class VartaStorage(object):
         self.apparent_power = self.client.get_production_power()
 
     def get_total_production_power(self):
-        # total production_power power for whole day in kWh 
+        # total production_power power for whole day in kWh
         # register 1101, size 1, U16FX2
 
         self.apparent_power = self.client.get_total_production_power()
@@ -85,46 +86,56 @@ class VartaStorage(object):
 
         self.apparent_power = self.client.get_total_charged_energy()
 
+    def get_serial(self):
+        # get serial of device using xml api (modbus registers are not documented properly)
+
+        self.serial = self.client.get_serial()
+
     def interpret_state(self):
         # "BUSY" (e.g. during startup) = 0/ "RUN" (ready to charge / discharge) = 1/
         # "CHARGE" = 2/ "DISCHARGE" = 3/ "STANDBY" = 4 /"ERROR" = 5 / "PASSIVE" (service) = 6/ "ISLANDING" = 7
-        if self.state == 0:
-            self.state_text = "BUSY"
-        elif self.state == 1:
-            self.state_text = "READY"
-        elif self.state == 2:
-            self.state_text = "CHARGE"
-        elif self.state == 3:
-            self.state_text = "DISCHARGE"
-        elif self.state == 4:
-            self.state_text = "STANDBY"
-        elif self.state == 5:
-            self.state_text = "ERROR"
-        elif self.state == 6:
-            self.state_text = "SERVICE"
-        elif self.state == 7:
-            self.state_text = "ISLANDING"
+        if type(self.state) == int:
+            if self.state == 0:
+                self.state_text = "BUSY"
+            elif self.state == 1:
+                self.state_text = "READY"
+            elif self.state == 2:
+                self.state_text = "CHARGE"
+            elif self.state == 3:
+                self.state_text = "DISCHARGE"
+            elif self.state == 4:
+                self.state_text = "STANDBY"
+            elif self.state == 5:
+                self.state_text = "ERROR"
+            elif self.state == 6:
+                self.state_text = "SERVICE"
+            elif self.state == 7:
+                self.state_text = "ISLANDING"
+            else:
+                self.state_text = ""
         else:
-            self.state_text = ""
+            self.state_text = None
 
     def calculate_to_from_grid(self):
-        if self.grid_power > 0:
-            self.to_grid_power = abs(self.grid_power)
-            self.from_grid_power = 0
-        elif self.grid_power < 0:
-            self.from_grid_power = abs(self.grid_power)
-            self.to_grid_power = 0
+        if type(self.grid_power) == int:
+            if self.grid_power > 0:
+                self.to_grid_power = abs(self.grid_power)
+                self.from_grid_power = 0
+            elif self.grid_power < 0:
+                self.from_grid_power = abs(self.grid_power)
+                self.to_grid_power = 0
         else:
-            self.to_grid_power = 0
-            self.from_grid_power = 0
+            self.to_grid_power = None
+            self.from_grid_power = None
 
     def calculate_charge_discharge(self):
-        if self.active_power > 0:
-            self.charge_power = abs(self.active_power)
-            self.discharge_power = 0
-        elif self.active_power < 0:
-            self.discharge_power = abs(self.active_power)
-            self.charge_power = 0
+        if type(self.active_power) == int:
+            if self.active_power > 0:
+                self.charge_power = abs(self.active_power)
+                self.discharge_power = 0
+            elif self.active_power < 0:
+                self.discharge_power = abs(self.active_power)
+                self.charge_power = 0
         else:
-            self.charge_power = 0
-            self.discharge_power = 0
+            self.charge_power = None
+            self.discharge_power = None

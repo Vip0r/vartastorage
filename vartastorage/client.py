@@ -1,8 +1,13 @@
 # coding: utf-8
 
+from mmap import ACCESS_DEFAULT
 from pymodbus.client.sync import ModbusTcpClient
 from pymodbus.payload import BinaryPayloadDecoder
 from pymodbus.constants import Endian
+import xml.etree.ElementTree as ET
+import requests
+import traceback
+import sys
 
 
 class Client(object):
@@ -22,20 +27,21 @@ class Client(object):
             )
 
     def get_all_data(self):
-        out = {
-            "grid_power": [],
-            "soc": [],
-            "state": [],
-            "active_power": [],
-            "apparent_power": [],
-            "production_power": [],
-            "total_production_power": [],
-            "error_code": [],
-            "total_charged_energy": []
-        }
         try:
-            out["grid_power"] = self.get_grid_power()
+            out = {
+                "soc": [],
+                "grid_power": [],
+                "state": [],
+                "active_power": [],
+                "apparent_power": [],
+                "production_power": [],
+                "total_production_power": [],
+                "error_code": [],
+                "total_charged_energy": [],
+                "serial": [],
+            }
             out["soc"] = self.get_soc()
+            out["grid_power"] = self.get_grid_power()
             out["state"] = self.get_state()
             out["active_power"] = self.get_active_power()
             out["apparent_power"] = self.get_apparent_power()
@@ -43,8 +49,9 @@ class Client(object):
             out["total_production_power"] = self.get_total_production_power()
             out["error_code"] = self.get_error_code()
             out["total_charged_energy"] = self.get_total_charged_energy()
-        except:
-            pass
+            out["serial"] = self.get_serial()
+        except Exception as e:
+            traceback.print_exception(*sys.exc_info())
 
         return out
 
@@ -58,11 +65,11 @@ class Client(object):
                     rr.registers, Endian.Big, Endian.Little
                 ).decode_16bit_int()
 
-        except:
-            pass
+                self.modbus_client.close()
+                return res
 
-        self.modbus_client.close()
-        return res
+        except Exception as e:
+            traceback.print_exception(*sys.exc_info())
 
     def get_soc(self):
         try:
@@ -74,11 +81,11 @@ class Client(object):
                     rr.registers, Endian.Big, Endian.Little
                 ).decode_16bit_uint()
 
-        except:
-            pass
+                self.modbus_client.close()
+                return res
 
-        self.modbus_client.close()
-        return res
+        except Exception as e:
+            traceback.print_exception(*sys.exc_info())
 
     def get_state(self):
         try:
@@ -90,11 +97,11 @@ class Client(object):
                     rr.registers, Endian.Big, Endian.Little
                 ).decode_16bit_uint()
 
-        except:
-            pass
+                self.modbus_client.close()
+                return res
 
-        self.modbus_client.close()
-        return res
+        except Exception as e:
+            traceback.print_exception(*sys.exc_info())
 
     def get_active_power(self):
         try:
@@ -106,11 +113,11 @@ class Client(object):
                     rr.registers, Endian.Big, Endian.Little
                 ).decode_16bit_int()
 
-        except:
-            pass
+                self.modbus_client.close()
+                return res
 
-        self.modbus_client.close()
-        return res
+        except Exception as e:
+            traceback.print_exception(*sys.exc_info())
 
     def get_apparent_power(self):
         try:
@@ -122,11 +129,11 @@ class Client(object):
                     rr.registers, Endian.Big, Endian.Little
                 ).decode_16bit_int()
 
-        except:
-            pass
+                self.modbus_client.close()
+                return res
 
-        self.modbus_client.close()
-        return res
+        except Exception as e:
+            traceback.print_exception(*sys.exc_info())
 
     def get_production_power(self):
         try:
@@ -138,11 +145,11 @@ class Client(object):
                     rr.registers, Endian.Big, Endian.Little
                 ).decode_16bit_uint()
 
-        except:
-            pass
+                self.modbus_client.close()
+                return res
 
-        self.modbus_client.close()
-        return res
+        except Exception as e:
+            traceback.print_exception(*sys.exc_info())
 
     def get_total_production_power(self):
         try:
@@ -154,11 +161,11 @@ class Client(object):
                     rr.registers, Endian.Big, Endian.Little
                 ).decode_16bit_float()
 
-        except:
-            pass
+                self.modbus_client.close()
+                return res
 
-        self.modbus_client.close()
-        return res
+        except Exception as e:
+            traceback.print_exception(*sys.exc_info())
 
     def get_error_code(self):
         try:
@@ -170,11 +177,11 @@ class Client(object):
                     rr.registers, Endian.Big, Endian.Little
                 ).decode_16bit_uint()
 
-        except:
-            pass
+                self.modbus_client.close()
+                return res
 
-        self.modbus_client.close()
-        return res
+        except Exception as e:
+            traceback.print_exception(*sys.exc_info())
 
     def get_total_charged_energy(self):
         try:
@@ -190,11 +197,22 @@ class Client(object):
                 res_high = BinaryPayloadDecoder.fromRegisters(
                     rr_high.registers, Endian.Big, Endian.Little
                 ).decode_16bit_uint()
+
+            self.modbus_client.close()
+
+            if not rr_low.isError() and not rr_high.isError():
+                res = ((res_high << 16) | (res_low & 0xFFFF)) / 1000
+                return res
+
+        except Exception as e:
+            traceback.print_exception(*sys.exc_info())
+
+    def get_serial(self):
+        url = "http://" + self.modbus_host + "/cgi/ems_data.xml"
+        try:
+            response = requests.get(url, timeout=3)
+            if response.status_code == 200:
+                result = ET.fromstring(response.text)
+                return result.get("id")
         except:
-            pass
-
-        self.modbus_client.close()
-
-        res = ((res_high << 16) | (res_low & 0xFFFF))/1000
-
-        return res
+            return False
