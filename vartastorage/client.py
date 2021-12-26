@@ -1,6 +1,5 @@
 # coding: utf-8
 
-from mmap import ACCESS_DEFAULT
 from pymodbus.client.sync import ModbusTcpClient
 from pymodbus.payload import BinaryPayloadDecoder
 from pymodbus.constants import Endian
