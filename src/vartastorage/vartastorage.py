@@ -137,5 +137,5 @@ class VartaStorage(object):
                 self.discharge_power = abs(self.active_power)
                 self.charge_power = 0
         else:
-            self.charge_power = None
-            self.discharge_power = None
+            self.charge_power = 0
+            self.discharge_power = 0
