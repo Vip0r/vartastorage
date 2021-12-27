@@ -1,7 +1,7 @@
 # Vartastorage
-Python module to access modbus registers and xml api values for various varta batteries. 
-Tested on my varta element/12 battery.
-Should work for other VARTA element, pulse, pulse neo, link and flex storage devices as well according to the modbus documentation
+With this Python module you can read modbus registers and xml api values from various VARTA batteries. 
+Tested on my VARTA element/12 battery.
+Should work for other VARTA element, pulse, pulse neo, link and flex storage devices as well.
 
 ## Setup
 pip3 install vartastorage
