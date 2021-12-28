@@ -118,7 +118,7 @@ class VartaStorage(object):
 
     def calculate_to_from_grid(self):
         if type(self.grid_power) == int:
-            if self.grid_power > 0:
+            if self.grid_power >= 0:
                 self.to_grid_power = abs(self.grid_power)
                 self.from_grid_power = 0
             elif self.grid_power < 0:
@@ -130,12 +130,12 @@ class VartaStorage(object):
 
     def calculate_charge_discharge(self):
         if type(self.active_power) == int:
-            if self.active_power > 0:
+            if self.active_power >= 0:
                 self.charge_power = abs(self.active_power)
                 self.discharge_power = 0
             elif self.active_power < 0:
                 self.discharge_power = abs(self.active_power)
                 self.charge_power = 0
         else:
-            self.charge_power = 0
-            self.discharge_power = 0
+            self.charge_power = None
+            self.discharge_power = None
