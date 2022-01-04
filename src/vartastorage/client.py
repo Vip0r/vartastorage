@@ -19,11 +19,8 @@ class Client(object):
         self.modbus_client = ModbusTcpClient(self.modbus_host, self.modbus_port)
         if self.modbus_client.connect():
             return True
-
         else:
-            raise ValueError(
-                "Connection to modbus server was not sucessful, please review your configuration"
-            )
+            return False
 
     def get_all_data(self):
         try:
