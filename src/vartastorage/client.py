@@ -47,7 +47,7 @@ class Client(object):
             out["total_charged_energy"] = self.get_total_charged_energy()
             out["serial"] = self.get_serial()
         except Exception as e:
-            traceback.print_exception(*sys.exc_info())
+            raise ValueError("An error occured while trying to poll all data fields. Please check your connection")
 
         return out
 
@@ -65,7 +65,7 @@ class Client(object):
                 return res
 
         except Exception as e:
-            traceback.print_exception(*sys.exc_info())
+            raise ValueError("An error occured while polling grid power. Please check your connection")
 
     def get_soc(self):
         try:
@@ -81,7 +81,7 @@ class Client(object):
                 return res
 
         except Exception as e:
-            traceback.print_exception(*sys.exc_info())
+            raise ValueError("An error occured while polling state of charge. Please check your connection")
 
     def get_state(self):
         try:
@@ -97,7 +97,7 @@ class Client(object):
                 return res
 
         except Exception as e:
-            traceback.print_exception(*sys.exc_info())
+            raise ValueError("An error occured while polling the device state. Please check your connection")
 
     def get_active_power(self):
         try:
@@ -113,7 +113,7 @@ class Client(object):
                 return res
 
         except Exception as e:
-            traceback.print_exception(*sys.exc_info())
+            raise ValueError("An error occured while polling active power. Please check your connection")
 
     def get_apparent_power(self):
         try:
@@ -129,7 +129,7 @@ class Client(object):
                 return res
 
         except Exception as e:
-            traceback.print_exception(*sys.exc_info())
+            raise ValueError("An error occured while polling apparent power. Please check your connection")
 
     def get_production_power(self):
         try:
@@ -145,7 +145,7 @@ class Client(object):
                 return res
 
         except Exception as e:
-            traceback.print_exception(*sys.exc_info())
+            raise ValueError("An error occured while polling production power. Please check your connection")
 
     def get_total_production_power(self):
         try:
@@ -161,7 +161,7 @@ class Client(object):
                 return res
 
         except Exception as e:
-            traceback.print_exception(*sys.exc_info())
+            raise ValueError("An error occured while polling total production power. Please check your connection")
 
     def get_error_code(self):
         try:
@@ -177,7 +177,7 @@ class Client(object):
                 return res
 
         except Exception as e:
-            traceback.print_exception(*sys.exc_info())
+            raise ValueError("An error occured while polling the error code. Please check your connection")
 
     def get_total_charged_energy(self):
         try:
@@ -201,7 +201,7 @@ class Client(object):
                 return res
 
         except Exception as e:
-            traceback.print_exception(*sys.exc_info())
+            raise ValueError("An error occured while polling the total charged energy. Please check your connection")
 
     def get_serial(self):
         url = "http://" + self.modbus_host + "/cgi/ems_data.xml"
@@ -210,5 +210,5 @@ class Client(object):
             if response.status_code == 200:
                 result = ET.fromstring(response.text)
                 return result.get("id")
-        except:
-            return False
+        except Exception as e:
+            raise ValueError("An error occured while polling the serial number. Please check your connection") 
