@@ -22,6 +22,15 @@ class Client(object):
         else:
             return False
 
+    def disconnect(self):
+        self.modbus_client.close()
+
+    def check_if_socket_open(self):
+        if self.modbus_client.is_socket_open():
+            return True
+        else:
+            return False
+
     def get_all_data(self):
         try:
             out = {
