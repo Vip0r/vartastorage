@@ -46,10 +46,10 @@ class Client(object):
             out["error_code"] = self.get_error_code()
             out["total_charged_energy"] = self.get_total_charged_energy()
             out["serial"] = self.get_serial()
+
+            return out
         except Exception as e:
             raise ValueError("An error occured while trying to poll all data fields. Please check your connection")
-
-        return out
 
     def get_grid_power(self):
         try:
