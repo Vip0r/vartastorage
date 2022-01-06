@@ -14,22 +14,16 @@ class Client(object):
 
         self.modbus_host = modbus_host
         self.modbus_port = modbus_port
+        self.modbus_client = ModbusTcpClient(self.modbus_host, self.modbus_port)
 
     def connect(self):
-        self.modbus_client = ModbusTcpClient(self.modbus_host, self.modbus_port)
-        if self.modbus_client.connect():
-            return True
-        else:
-            return False
+        return self.modbus_client.connect()
 
     def disconnect(self):
-        self.modbus_client.close()
+        return self.modbus_client.close()
 
     def check_if_socket_open(self):
-        if self.modbus_client.is_socket_open():
-            return True
-        else:
-            return False
+        return self.modbus_client.is_socket_open()
 
     def get_all_data(self):
         try:
