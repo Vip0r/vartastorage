@@ -21,8 +21,6 @@ class VartaStorage(object):
         self.active_power = data["active_power"]
         self.calculate_charge_discharge()  # create dedicated properties for charge and discharge
         self.apparent_power = data["apparent_power"]
-        self.production_power = data["production_power"]
-        self.total_production_power = data["total_production_power"]
         self.error_code = data["error_code"]
         self.total_charged_energy = data["total_charged_energy"]
         self.serial = data["serial"]
@@ -63,18 +61,6 @@ class VartaStorage(object):
         # register 1067, size 1, SINT16
 
         self.apparent_power = self.client.get_apparent_power()
-
-    def get_production_power(self):
-        # current production_power power in W
-        # register 1100, size 1, UINT16
-
-        self.apparent_power = self.client.get_production_power()
-
-    def get_total_production_power(self):
-        # total production_power power for whole day in kWh
-        # register 1101, size 1, U16FX2
-
-        self.apparent_power = self.client.get_total_production_power()
 
     def get_error_code(self):
         # errorcode EMS

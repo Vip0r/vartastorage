@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name="vartastorage",
-    version="0.2.2",
+    version="0.2.3",
     description="VARTA Battery",
     long_description='With this Python module you can read modbus registers and xml/cgi api values from various VARTA batteries',
     url="http://github.com/vip0r/vartastorage",

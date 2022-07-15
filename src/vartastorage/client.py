@@ -33,8 +33,6 @@ class Client(object):
                 "state": [],
                 "active_power": [],
                 "apparent_power": [],
-                "production_power": [],
-                "total_production_power": [],
                 "error_code": [],
                 "total_charged_energy": [],
                 "serial": [],
@@ -49,8 +47,6 @@ class Client(object):
             out["state"] = self.get_state()
             out["active_power"] = self.get_active_power()
             out["apparent_power"] = self.get_apparent_power()
-            out["production_power"] = self.get_production_power()
-            out["total_production_power"] = self.get_total_production_power()
             out["error_code"] = self.get_error_code()
             out["total_charged_energy"] = self.get_total_charged_energy()
             out["serial"] = self.get_serial()
@@ -145,38 +141,6 @@ class Client(object):
 
         except Exception as e:
             raise ValueError("An error occured while polling apparent power. Please check your connection")
-
-    def get_production_power(self):
-        try:
-            self.connect()
-            rr = self.modbus_client.read_holding_registers(1100, 1, unit=255)
-
-            if not rr.isError():
-                res = BinaryPayloadDecoder.fromRegisters(
-                    rr.registers, Endian.Big, Endian.Little
-                ).decode_16bit_uint()
-
-                self.modbus_client.close()
-                return res
-
-        except Exception as e:
-            raise ValueError("An error occured while polling production power. Please check your connection")
-
-    def get_total_production_power(self):
-        try:
-            self.connect()
-            rr = self.modbus_client.read_holding_registers(1101, 1, unit=255)
-
-            if not rr.isError():
-                res = BinaryPayloadDecoder.fromRegisters(
-                    rr.registers, Endian.Big, Endian.Little
-                ).decode_16bit_float()
-
-                self.modbus_client.close()
-                return res
-
-        except Exception as e:
-            raise ValueError("An error occured while polling total production power. Please check your connection")
 
     def get_error_code(self):
         try:
