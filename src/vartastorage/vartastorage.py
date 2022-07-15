@@ -26,6 +26,8 @@ class VartaStorage(object):
         self.error_code = data["error_code"]
         self.total_charged_energy = data["total_charged_energy"]
         self.serial = data["serial"]
+        self.get_energy_cgi()
+        self.get_service_cgi()
 
     def get_grid_power(self):
         # grid power in Watt; measured at household grid connection point
@@ -90,6 +92,31 @@ class VartaStorage(object):
         # get serial of device using xml api (modbus registers are not documented properly)
 
         self.serial = self.client.get_serial()
+
+    def get_energy_cgi(self):
+        #get energy values and charge load cycles from CGI
+        #EGrid_AC_DC == Grid -> Building (Wh)
+        #EGrid_DC_AC == Home -> Grid (Wh)
+        #EWr_AC_DC == Inverter AC -> DC == Total Charged (Wh)
+        #EWr_DC_AC == Inverter DC -> AC == Total Discharged (Wh)
+        #Chrg_LoadCycles == Charge Cycle Counter
+        energycgidata = self.client.get_energy_cgi()
+        self.grid_to_home = energycgidata["EGrid_AC_DC"]
+        self.home_to_grid = energycgidata["EGrid_DC_AC"]
+        self.inverter_total_charged = energycgidata["EWr_AC_DC"]
+        self.inverter_total_discharged = energycgidata["EWr_DC_AC"]
+        self.charge_cycle_counter = energycgidata["Chrg_LoadCycles"]
+
+    def get_service_cgi(self):
+        #get values from maintenance CGI
+        #hours_until_filter_maintenance
+        #fan state
+        #main is now yet known / undocumented
+        servicecgidata = self.client.get_service_cgi()
+        self.hours_until_filter_maintenance = servicecgidata["FilterZeit"]
+        self.fan = servicecgidata["Fan"]
+        self.main = servicecgidata["Main"]
+
 
     def interpret_state(self):
         # "BUSY" (e.g. during startup) = 0/ "RUN" (ready to charge / discharge) = 1/
