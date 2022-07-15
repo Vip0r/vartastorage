@@ -19,7 +19,7 @@ varta.get_all_data()
 #show current grid power
 print(varta.grid_power)
 
-#update only SoC Value
+#update only state of charge
 varta.get_soc()
 
 #show battery SoC
