@@ -1,6 +1,6 @@
 # coding: utf-8
 
-from pymodbus.client.sync import ModbusTcpClient
+from pymodbus.client.tcp import ModbusTcpClient
 from pymodbus.payload import BinaryPayloadDecoder
 from pymodbus.constants import Endian
 import xml.etree.ElementTree as ET
