@@ -65,7 +65,7 @@ class Client(object):
     def get_grid_power(self):
         try:
             self.connect()
-            rr = self.modbus_client.read_holding_registers(1078, 1, unit=255)
+            rr = self.modbus_client.read_holding_registers(1078, 1, slave=255)
 
             if not rr.isError():
                 res = BinaryPayloadDecoder.fromRegisters(
@@ -81,7 +81,7 @@ class Client(object):
     def get_soc(self):
         try:
             self.connect()
-            rr = self.modbus_client.read_holding_registers(1068, 1, unit=255)
+            rr = self.modbus_client.read_holding_registers(1068, 1, slave=255)
 
             if not rr.isError():
                 res = BinaryPayloadDecoder.fromRegisters(
@@ -97,7 +97,7 @@ class Client(object):
     def get_state(self):
         try:
             self.connect()
-            rr = self.modbus_client.read_holding_registers(1065, 1, unit=255)
+            rr = self.modbus_client.read_holding_registers(1065, 1, slave=255)
 
             if not rr.isError():
                 res = BinaryPayloadDecoder.fromRegisters(
@@ -113,7 +113,7 @@ class Client(object):
     def get_active_power(self):
         try:
             self.connect()
-            rr = self.modbus_client.read_holding_registers(1066, 1, unit=255)
+            rr = self.modbus_client.read_holding_registers(1066, 1, slave=255)
 
             if not rr.isError():
                 res = BinaryPayloadDecoder.fromRegisters(
@@ -129,7 +129,7 @@ class Client(object):
     def get_apparent_power(self):
         try:
             self.connect()
-            rr = self.modbus_client.read_holding_registers(1067, 1, unit=255)
+            rr = self.modbus_client.read_holding_registers(1067, 1, slave=255)
 
             if not rr.isError():
                 res = BinaryPayloadDecoder.fromRegisters(
@@ -145,7 +145,7 @@ class Client(object):
     def get_error_code(self):
         try:
             self.connect()
-            rr = self.modbus_client.read_holding_registers(1072, 1, unit=255)
+            rr = self.modbus_client.read_holding_registers(1072, 1, slave=255)
 
             if not rr.isError():
                 res = BinaryPayloadDecoder.fromRegisters(
@@ -161,13 +161,13 @@ class Client(object):
     def get_total_charged_energy(self):
         try:
             self.connect()
-            rr_low = self.modbus_client.read_holding_registers(1069, 1, unit=255)
+            rr_low = self.modbus_client.read_holding_registers(1069, 1, slave=255)
             if not rr_low.isError():
                 res_low = BinaryPayloadDecoder.fromRegisters(
                     rr_low.registers, Endian.Big, Endian.Little
                 ).decode_16bit_uint()
 
-            rr_high = self.modbus_client.read_holding_registers(1070, 1, unit=255)
+            rr_high = self.modbus_client.read_holding_registers(1070, 1, slave=255)
             if not rr_high.isError():
                 res_high = BinaryPayloadDecoder.fromRegisters(
                     rr_high.registers, Endian.Big, Endian.Little
