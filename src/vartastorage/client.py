@@ -188,9 +188,11 @@ class Client(object):
             response = requests.get(url, timeout=3)
             if response.status_code == 200:
                 result = ET.fromstring(response.text)
-                return result.get("id")
+                result = result.get("id")
         except Exception as e:
+            result = 0
             raise ValueError("An error occured while polling the serial number. Please check your connection") 
+        return result
 
     def get_energy_cgi(self):
         #get energy totals and charge load cycles from CGI
@@ -206,9 +208,16 @@ class Client(object):
                 "EWr_DC_AC": response.text.split(';\n')[3].split('= ')[1],
                 "Chrg_LoadCycles": response.text.split(';\n')[4].split('= ')[1].replace("]","").replace("[","")
                 }
-                return result
         except Exception as e:
+            result = {
+                "EGrid_AC_DC": 0,
+                "EGrid_DC_AC": 0,
+                "EWr_AC_DC": 0,
+                "EWr_DC_AC": 0,
+                "Chrg_LoadCycles": 0,
+                }
             raise ValueError("An error occured while polling the energy totals. Please check your connection") 
+        return result
 
     def get_service_cgi(self):
         #get service and maintenance data from CGI
@@ -222,7 +231,12 @@ class Client(object):
                 "Fan": response.text.split(';\n')[1].split('= ')[1],
                 "Main": response.text.split(';\n')[2].split('= ')[1],
                 }
-                return result
         except Exception as e:
+            result = {
+                "FilterZeit": 0,
+                "Fan": 0,
+                "Main": 0,
+                }
             raise ValueError("An error occured while polling the maintenance CGI. Please check your connection") 
+        return result
     
