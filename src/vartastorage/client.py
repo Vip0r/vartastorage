@@ -69,7 +69,7 @@ class Client(object):
 
             if not rr.isError():
                 res = BinaryPayloadDecoder.fromRegisters(
-                    rr.registers, Endian.Big, Endian.Little
+                    rr.registers, Endian.BIG, Endian.LITTLE
                 ).decode_16bit_int()
 
                 self.modbus_client.close()
@@ -85,7 +85,7 @@ class Client(object):
 
             if not rr.isError():
                 res = BinaryPayloadDecoder.fromRegisters(
-                    rr.registers, Endian.Big, Endian.Little
+                    rr.registers, Endian.BIG, Endian.LITTLE
                 ).decode_16bit_uint()
 
                 self.modbus_client.close()
@@ -101,7 +101,7 @@ class Client(object):
 
             if not rr.isError():
                 res = BinaryPayloadDecoder.fromRegisters(
-                    rr.registers, Endian.Big, Endian.Little
+                    rr.registers, Endian.BIG, Endian.LITTLE
                 ).decode_16bit_uint()
 
                 self.modbus_client.close()
@@ -117,7 +117,7 @@ class Client(object):
 
             if not rr.isError():
                 res = BinaryPayloadDecoder.fromRegisters(
-                    rr.registers, Endian.Big, Endian.Little
+                    rr.registers, Endian.BIG, Endian.LITTLE
                 ).decode_16bit_int()
 
                 self.modbus_client.close()
@@ -133,7 +133,7 @@ class Client(object):
 
             if not rr.isError():
                 res = BinaryPayloadDecoder.fromRegisters(
-                    rr.registers, Endian.Big, Endian.Little
+                    rr.registers, Endian.BIG, Endian.LITTLE
                 ).decode_16bit_int()
 
                 self.modbus_client.close()
@@ -149,7 +149,7 @@ class Client(object):
 
             if not rr.isError():
                 res = BinaryPayloadDecoder.fromRegisters(
-                    rr.registers, Endian.Big, Endian.Little
+                    rr.registers, Endian.BIG, Endian.LITTLE
                 ).decode_16bit_uint()
 
                 self.modbus_client.close()
@@ -164,13 +164,13 @@ class Client(object):
             rr_low = self.modbus_client.read_holding_registers(1069, 1, slave=255)
             if not rr_low.isError():
                 res_low = BinaryPayloadDecoder.fromRegisters(
-                    rr_low.registers, Endian.Big, Endian.Little
+                    rr_low.registers, Endian.BIG, Endian.LITTLE
                 ).decode_16bit_uint()
 
             rr_high = self.modbus_client.read_holding_registers(1070, 1, slave=255)
             if not rr_high.isError():
                 res_high = BinaryPayloadDecoder.fromRegisters(
-                    rr_high.registers, Endian.Big, Endian.Little
+                    rr_high.registers, Endian.BIG, Endian.LITTLE
                 ).decode_16bit_uint()
 
             self.modbus_client.close()
