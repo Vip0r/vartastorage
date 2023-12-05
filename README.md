@@ -6,13 +6,25 @@ Should work for other VARTA element, pulse, pulse neo, link and flex storage dev
 ## Setup
 pip3 install vartastorage
 
-## Usage
+## Usage with login
+```python
+from vartastorage.vartastorage import VartaStorage
+
+#ip and port for modbus host
+varta = VartaStorage('10.0.2.3',502,'pass123456')
+
+```
+
+## Usage without login
 ```python
 from vartastorage.vartastorage import VartaStorage
 
 #ip and port for modbus host
 varta = VartaStorage('10.0.2.3',502)
 
+```
+
+```python
 #update all values provided by modbus server
 varta.get_all_data()
 
