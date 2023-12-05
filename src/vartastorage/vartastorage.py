@@ -2,13 +2,13 @@
 
 from datetime import datetime
 
-from vartastorage.client import Client
+from .client import Client
 
 
 class VartaStorage(object):
-    def __init__(self, modbus_host, modbus_port):
+    def __init__(self, modbus_host, modbus_port, password):
         # connect to modbus server
-        self.client = Client(modbus_host, modbus_port)
+        self.client = Client(modbus_host, modbus_port, password)
 
     def get_all_data(self):
         # get all known registers
@@ -26,6 +26,7 @@ class VartaStorage(object):
         self.serial = data["serial"]
         self.get_energy_cgi()
         self.get_service_cgi()
+        # self.get_ems_cgi()
 
     def get_grid_power(self):
         # grid power in Watt; measured at household grid connection point
@@ -80,12 +81,12 @@ class VartaStorage(object):
         self.serial = self.client.get_serial()
 
     def get_energy_cgi(self):
-        #get energy values and charge load cycles from CGI
-        #EGrid_AC_DC == Grid -> Building (Wh)
-        #EGrid_DC_AC == Home -> Grid (Wh)
-        #EWr_AC_DC == Inverter AC -> DC == Total Charged (Wh)
-        #EWr_DC_AC == Inverter DC -> AC == Total Discharged (Wh)
-        #Chrg_LoadCycles == Charge Cycle Counter
+        # get energy values and charge load cycles from CGI
+        # EGrid_AC_DC == Grid -> Building (Wh)
+        # EGrid_DC_AC == Home -> Grid (Wh)
+        # EWr_AC_DC == Inverter AC -> DC == Total Charged (Wh)
+        # EWr_DC_AC == Inverter DC -> AC == Total Discharged (Wh)
+        # Chrg_LoadCycles == Charge Cycle Counter
         energycgidata = self.client.get_energy_cgi()
         self.grid_to_home = energycgidata["EGrid_AC_DC"]
         self.home_to_grid = energycgidata["EGrid_DC_AC"]
@@ -94,15 +95,40 @@ class VartaStorage(object):
         self.charge_cycle_counter = energycgidata["Chrg_LoadCycles"]
 
     def get_service_cgi(self):
-        #get values from maintenance CGI
-        #hours_until_filter_maintenance
-        #fan state
-        #main is now yet known / undocumented
+        # get values from maintenance CGI
+        # hours_until_filter_maintenance
+        # fan state
+        # main is now yet known / undocumented
         servicecgidata = self.client.get_service_cgi()
         self.hours_until_filter_maintenance = servicecgidata["FilterZeit"]
         self.fan = servicecgidata["Fan"]
         self.main = servicecgidata["Main"]
 
+    def get_ems_cgi(self):
+        # get ems values
+        emscgidata = self.client.get_ems_cgi()
+        self.FNetz = emscgidata["FNetz"]
+        self.U_V_L1 = emscgidata["U_V_L1"]
+        self.U_V_L2 = emscgidata["U_V_L2"]
+        self.U_V_L3 = emscgidata["U_V_L3"]
+        self.Iw_V_L1 = emscgidata["Iw_V_L1"]
+        self.Iw_V_L2 = emscgidata["Iw_V_L2"]
+        self.Iw_V_L3 = emscgidata["Iw_V_L3"]
+        self.Ib_V_L1 = emscgidata["Ib_V_L1"]
+        self.Ib_V_L2 = emscgidata["Ib_V_L2"]
+        self.Ib_V_L3 = emscgidata["Ib_V_L3"]
+        self.Is_V_L1 = emscgidata["Is_V_L1"]
+        self.Is_V_L2 = emscgidata["Is_V_L2"]
+        self.Is_V_L3 = emscgidata["Is_V_L3"]
+        self.Iw_PV_L1 = emscgidata["Iw_PV_L1"]
+        self.Iw_PV_L2 = emscgidata["Iw_PV_L2"]
+        self.Iw_PV_L3 = emscgidata["Iw_PV_L3"]
+        self.Ib_PV_L1 = emscgidata["Ib_PV_L1"]
+        self.Ib_PV_L2 = emscgidata["Ib_PV_L2"]
+        self.Ib_PV_L3 = emscgidata["Ib_PV_L3"]
+        self.Is_PV_L1 = emscgidata["Is_PV_L1"]
+        self.Is_PV_L2 = emscgidata["Is_PV_L2"]
+        self.Is_PV_L3 = emscgidata["Is_PV_L3"]
 
     def interpret_state(self):
         # "BUSY" (e.g. during startup) = 0/ "RUN" (ready to charge / discharge) = 1/
