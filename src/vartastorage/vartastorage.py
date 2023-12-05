@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from .client import Client
+from vartastorage.client import Client
 
 
 class VartaStorage(object):
