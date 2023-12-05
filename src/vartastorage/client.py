@@ -63,9 +63,7 @@ class Client(object):
 
             return out
         except Exception as e:
-            raise ValueError(
-                "An error occured while trying to poll all data fields. Please check your connection"
-            )
+            raise ValueError("An error occured while trying to poll all data fields. Please check your connection")
 
     def get_grid_power(self):
         try:
@@ -81,9 +79,7 @@ class Client(object):
                 return res
 
         except Exception as e:
-            raise ValueError(
-                "An error occured while polling grid power. Please check your connection"
-            )
+            raise ValueError("An error occured while polling grid power. Please check your connection")
 
     def get_soc(self):
         try:
@@ -99,9 +95,7 @@ class Client(object):
                 return res
 
         except Exception as e:
-            raise ValueError(
-                "An error occured while polling state of charge. Please check your connection"
-            )
+            raise ValueError("An error occured while polling state of charge. Please check your connection")
 
     def get_state(self):
         try:
@@ -117,9 +111,7 @@ class Client(object):
                 return res
 
         except Exception as e:
-            raise ValueError(
-                "An error occured while polling the device state. Please check your connection"
-            )
+            raise ValueError("An error occured while polling the device state. Please check your connection")
 
     def get_active_power(self):
         try:
@@ -135,9 +127,7 @@ class Client(object):
                 return res
 
         except Exception as e:
-            raise ValueError(
-                "An error occured while polling active power. Please check your connection"
-            )
+            raise ValueError("An error occured while polling active power. Please check your connection")
 
     def get_apparent_power(self):
         try:
@@ -153,9 +143,7 @@ class Client(object):
                 return res
 
         except Exception as e:
-            raise ValueError(
-                "An error occured while polling apparent power. Please check your connection"
-            )
+            raise ValueError("An error occured while polling apparent power. Please check your connection")
 
     def get_error_code(self):
         try:
@@ -171,9 +159,7 @@ class Client(object):
                 return res
 
         except Exception as e:
-            raise ValueError(
-                "An error occured while polling the error code. Please check your connection"
-            )
+            raise ValueError("An error occured while polling the error code. Please check your connection")
 
     def get_total_charged_energy(self):
         try:
@@ -197,9 +183,7 @@ class Client(object):
                 return res
 
         except Exception as e:
-            raise ValueError(
-                "An error occured while polling the total charged energy. Please check your connection"
-            )
+            raise ValueError("An error occured while polling the total charged energy. Please check your connection")
 
     def get_serial(self):
         try:
@@ -209,9 +193,7 @@ class Client(object):
                 result = result.get("id")
         except Exception as e:
             result = 0
-            raise ValueError(
-                "An error occured while polling the serial number. Please check your connection"
-            )
+            raise ValueError("An error occured while polling the serial number. Please check your connection")
         return result
 
     def get_energy_cgi(self):
@@ -233,9 +215,7 @@ class Client(object):
                     result[resultValue[0]] = resultValue[1].replace("]", "").replace("[", "")
 
         except Exception as e:
-            raise ValueError(
-                "An error occured while polling the energy totals. Please check your connection"
-            )
+            raise ValueError("An error occured while polling the energy totals. Please check your connection")
         return result
 
     def get_ems_cgi(self):
@@ -293,9 +273,7 @@ class Client(object):
                 "Is_PV_L2": 0,
                 "Is_PV_L3": 0,
             }
-            raise ValueError(
-                "An error occured while polling the ems values. Please check your connection"
-            )
+            raise ValueError("An error occured while polling the ems values. Please check your connection")
         return result
 
     def get_service_cgi(self):
@@ -314,9 +292,7 @@ class Client(object):
                     result[resultValue[0]] = resultValue[1]
 
         except Exception as e:
-            raise ValueError(
-                "An error occured while polling the maintenance CGI. Please check your connection"
-            )
+            raise ValueError("An error occured while polling the maintenance CGI. Please check your connection")
         return result
 
     def request_data(self, urlEnding):
@@ -328,24 +304,18 @@ class Client(object):
                 for i in range(4):
                     if self.check_logged_in():
                         return self.session.get(url, timeout=3)
-                raise ValueError(
-                    "An error occured while polling the maintenance CGI. Couldn't login"
-                )
+                raise ValueError("An error occured while polling the maintenance CGI. Couldn't login")
             else:
                 return self.session.get(url, timeout=3)
         except Exception as e:
-            raise ValueError(
-                "An error occured while polling the maintenance CGI. Please check your connection"
-            )
+            raise ValueError("An error occured while polling the maintenance CGI. Please check your connection")
 
     def check_logged_in(self):
         pass_url = "http://" + self.modbus_host + "/cgi/login"
         response = self.session.get(pass_url, timeout=3)
         if response.status_code != 200:
             # Trouble connecting - raise error
-                raise ValueError(
-                    "An error occured while polling the maintenance CGI. Login didn't work"
-                )
+                raise ValueError("An error occured while polling the maintenance CGI. Login didn't work")
         values = re.compile("userlevel = ([0-9]+)")
         results = values.findall(response.text)
         if results[0] != "2":
@@ -354,9 +324,7 @@ class Client(object):
             response = self.session.post(pass_url, login_data, timeout=3)
             if response.status_code != 200:
                 # We are still not logged in - something went wrong
-                raise ValueError(
-                    "An error occured while polling the maintenance CGI. Login didn't work"
-                )
+                raise ValueError("An error occured while polling the maintenance CGI. Login didn't work")
             return False
         else:
             return True
