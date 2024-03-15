@@ -1,0 +1,12 @@
+README.md
+setup.py
+src/vartastorage/__init__.py
+src/vartastorage/client.py
+src/vartastorage/test.py
+src/vartastorage/vartastorage.py
+src/vartastorage.egg-info/PKG-INFO
+src/vartastorage.egg-info/SOURCES.txt
+src/vartastorage.egg-info/dependency_links.txt
+src/vartastorage.egg-info/not-zip-safe
+src/vartastorage.egg-info/requires.txt
+src/vartastorage.egg-info/top_level.txt

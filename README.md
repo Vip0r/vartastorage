@@ -10,19 +10,23 @@ pip3 install vartastorage
 ```python
 from vartastorage.vartastorage import VartaStorage
 
-#ip and port for modbus host
+# ip and port for modbus host
 varta = VartaStorage('10.0.2.3',502)
 
-#update all values provided by modbus server
-varta.get_all_data()
+# in case of a password protected cgi/xml endpoint you can authenticate as well.
+# user1 is for some varta devices a standard user
+varta = VartaStorage('10.0.2.3', 502, username="user1", password="yourpassword")
 
-#show current grid power
+# update all values provided by modbus server
+varta.get_all_data_modbus()
+
+# show current grid power
 print(varta.grid_power)
 
-#update only state of charge
+# update only state of charge
 varta.get_soc()
 
-#show battery SoC
+# show battery SoC
 print(varta.soc)
 
 ```

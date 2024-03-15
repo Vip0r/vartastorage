@@ -1,0 +1,11 @@
+Metadata-Version: 1.2
+Name: vartastorage
+Version: 0.2.0
+Summary: VARTA Battery
+Home-page: http://github.com/vip0r/vartastorage
+Author: edAndy
+Author-email: an-dy@gmx.de
+License: APACHE
+Description: With this Python module you can read modbus registers and xml api values from various VARTA batteries
+Platform: UNKNOWN
+Requires-Python: >=3.5
