@@ -1,6 +1,7 @@
 # coding: utf-8
 
 from pymodbus.client.tcp import ModbusTcpClient
+from pymodbus.exceptions import ModbusException
 from pymodbus.payload import BinaryPayloadDecoder
 from pymodbus.constants import Endian
 import xml.etree.ElementTree as ET
@@ -8,8 +9,10 @@ import requests
 import re
 import json
 
+
 class Client(object):
     def __init__(self, modbus_host, modbus_port, username, password):
+        self._slave = 255
 
         self.modbus_host = modbus_host
         self.modbus_port = modbus_port
@@ -58,7 +61,7 @@ class Client(object):
         except Exception as e:
             raise ValueError(
                 "An error occured while trying to poll all data fields. Please check your connection"
-                )
+            ) from e
 
     def get_all_data_cgi(self):
         try:
@@ -72,7 +75,7 @@ class Client(object):
                 "Fan": [],
                 "Main": [],
             }
-            
+
             energytotals = self.get_energy_cgi()
             out["EGrid_AC_DC"] = int(energytotals["EGrid_AC_DC"])
             out["EGrid_DC_AC"] = int(energytotals["EGrid_DC_AC"])
@@ -89,55 +92,37 @@ class Client(object):
         except Exception as e:
             raise ValueError(
                 "An error occured while trying to poll all data fields. Please check your connection"
-                )
-
+            )
 
     def get_serial_modbus(self):
         # Retrieves the Serial Number of the device
         # Supported on VARTA element, pulse, pulse neo, link and flex storage devices
 
-        try:
-            self.connect()
-            rr = self.modbus_client.read_holding_registers(1054, 10, slave=255)
+        registers = self._get_value_modbus(1054, 10)
 
-            if not rr.isError():
-                res = BinaryPayloadDecoder.fromRegisters(
-                    rr.registers, Endian.BIG, Endian.BIG
-                ).decode_string(18).decode()
-                
-                #I know this is super wierd. But i have no idea whats here going on in the pymodbus library and i have to use this function to reformat the string correctly
-                chars = [x for x in res]
-                result_string = ''.join(chars[1::2])
-                res = result_string
+        result = (
+            BinaryPayloadDecoder.fromRegisters(registers, Endian.BIG, Endian.BIG)
+            .decode_string(18)
+            .decode()
+        )
 
-                self.modbus_client.close()
-                return res
+        # I know this is super wierd. But i have no idea whats here going on in the
+        # pymodbus library and i have to use this function to reformat the string correctly
+        chars = [x for x in result]
+        result_string = "".join(chars[1::2])
+        res = result_string
 
-        except Exception as e:
-            raise ValueError(
-                "An error occured while polling grid power. Please check your connection"
-                )
-    
+        return res
+
     def get_bm_modbus(self):
         # Retrieves the number of battery modules installed
         # Supported on VARTA element, pulse, pulse neo, link and flex storage devices
 
-        try:
-            self.connect()
-            rr = self.modbus_client.read_holding_registers(1064, 1, slave=255)
-
-            if not rr.isError():
-                res = BinaryPayloadDecoder.fromRegisters(
-                    rr.registers, Endian.BIG, Endian.LITTLE
-                ).decode_16bit_uint()
-
-                self.modbus_client.close()
-                return res
-
-        except Exception as e:
-            raise ValueError(
-                "An error occured while polling the number of battery modules installed. Please check your connection"
-                )
+        registers = self._get_value_modbus(1064, 1)
+        result = BinaryPayloadDecoder.fromRegisters(
+            registers, Endian.BIG, Endian.LITTLE
+        ).decode_16bit_uint()
+        return result
 
     def get_state_modbus(self):
         # Retrieves the state of the device
@@ -145,174 +130,107 @@ class Client(object):
         # "CHARGE" = 2/ "DISCHARGE" = 3/ "STANDBY" = 4 /"ERROR" = 5 / "PASSIVE" (service) = 6/ "ISLANDING" = 7
         # Supported on VARTA element, pulse, pulse neo, link and flex storage devices
 
-        try:
-            self.connect()
-            rr = self.modbus_client.read_holding_registers(1065, 1, slave=255)
-
-            if not rr.isError():
-                res = BinaryPayloadDecoder.fromRegisters(
-                    rr.registers, Endian.BIG, Endian.LITTLE
-                ).decode_16bit_uint()
-
-                self.modbus_client.close()
-                return res
-
-        except Exception as e:
-            raise ValueError(
-                "An error occured while polling the device state. Please check your connection"
-                )
+        registers = self._get_value_modbus(1065, 1)
+        result = BinaryPayloadDecoder.fromRegisters(
+            registers, Endian.BIG, Endian.LITTLE
+        ).decode_16bit_uint()
+        return result
 
     def get_active_power_modbus(self):
-        # Active Power measured at the internal inverter. Positive = Charge, Negative = Discharge 
+        # Active Power measured at the internal inverter. Positive = Charge, Negative = Discharge
         # Supported on VARTA element, pulse, pulse neo, link and flex storage devices
 
-        try:
-            self.connect()
-            rr = self.modbus_client.read_holding_registers(1066, 1, slave=255)
-
-            if not rr.isError():
-                res = BinaryPayloadDecoder.fromRegisters(
-                    rr.registers, Endian.BIG, Endian.LITTLE
-                ).decode_16bit_int()
-
-                self.modbus_client.close()
-                return res
-
-        except Exception as e:
-            raise ValueError(
-                "An error occured while polling active power. Please check your connection"
-                )
+        registers = self._get_value_modbus(1066, 1)
+        result = BinaryPayloadDecoder.fromRegisters(
+            registers, Endian.BIG, Endian.LITTLE
+        ).decode_16bit_int()
+        return result
 
     def get_apparent_power_modbus(self):
-        # Apparent Power measured at the internal inverter. Positive = Charge, Negative = Discharge  
+        # Apparent Power measured at the internal inverter. Positive = Charge, Negative = Discharge
         # Supported on VARTA element, pulse, pulse neo, link and flex storage devices
 
-        try:
-            self.connect()
-            rr = self.modbus_client.read_holding_registers(1067, 1, slave=255)
-
-            if not rr.isError():
-                res = BinaryPayloadDecoder.fromRegisters(
-                    rr.registers, Endian.BIG, Endian.LITTLE
-                ).decode_16bit_int()
-
-                self.modbus_client.close()
-                return res
-
-        except Exception as e:
-            raise ValueError(
-                "An error occured while polling apparent power. Please check your connection"
-                )
+        registers = self._get_value_modbus(1067, 1)
+        result = BinaryPayloadDecoder.fromRegisters(
+            registers, Endian.BIG, Endian.LITTLE
+        ).decode_16bit_int()
+        return result
 
     def get_soc_modbus(self):
         # Current State of Charge of the Battery Power
         # Supported on VARTA element, pulse, pulse neo, link and flex storage devices
 
-        try:
-            self.connect()
-            rr = self.modbus_client.read_holding_registers(1068, 1, slave=255)
-
-            if not rr.isError():
-                res = BinaryPayloadDecoder.fromRegisters(
-                    rr.registers, Endian.BIG, Endian.LITTLE
-                ).decode_16bit_uint()
-
-                self.modbus_client.close()
-                return res
-
-        except Exception as e:
-            raise ValueError(
-                "An error occured while polling state of charge. Please check your connection"
-                )
+        registers = self._get_value_modbus(1068, 1)
+        result = BinaryPayloadDecoder.fromRegisters(
+            registers, Endian.BIG, Endian.LITTLE
+        ).decode_16bit_uint()
+        return result
 
     def get_total_charged_energy_modbus(self):
-        # Total charged energy 
+        # Total charged energy
         # Supported on VARTA element, pulse, pulse neo, link and flex storage devices
 
-        try:
-            self.connect()
-            rr_low = self.modbus_client.read_holding_registers(1069, 1, slave=255)
-            if not rr_low.isError():
-                res_low = BinaryPayloadDecoder.fromRegisters(
-                    rr_low.registers, Endian.BIG, Endian.LITTLE
-                ).decode_16bit_uint()
+        reg_low = self._get_value_modbus(1069, 1)
+        reg_high = self._get_value_modbus(1070, 1)
 
-            rr_high = self.modbus_client.read_holding_registers(1070, 1, slave=255)
-            if not rr_high.isError():
-                res_high = BinaryPayloadDecoder.fromRegisters(
-                    rr_high.registers, Endian.BIG, Endian.LITTLE
-                ).decode_16bit_uint()
+        res_low = BinaryPayloadDecoder.fromRegisters(
+            reg_low, Endian.BIG, Endian.LITTLE
+        ).decode_16bit_uint()
 
-            self.modbus_client.close()
+        res_high = BinaryPayloadDecoder.fromRegisters(
+            reg_high, Endian.BIG, Endian.LITTLE
+        ).decode_16bit_uint()
 
-            if not rr_low.isError() and not rr_high.isError():
-                res = ((res_high << 16) | (res_low & 0xFFFF)) / 1000
-                return res
-
-        except Exception as e:
-            raise ValueError(
-                "An error occured while polling the total charged energy. Please check your connection"
-                )
+        res = ((res_high << 16) | (res_low & 0xFFFF)) / 1000
+        return res
 
     def get_installed_capacity_modbus(self):
         # Retrieves the total installed capacity in the device
         # Supported on VARTA element, pulse, pulse neo, link and flex storage devices
 
-        try:
-            self.connect()
-            rr = self.modbus_client.read_holding_registers(1071, 1, slave=255)
+        registers = self._get_value_modbus(1071, 1)
+        result = BinaryPayloadDecoder.fromRegisters(
+            registers, Endian.BIG, Endian.LITTLE
+        ).decode_16bit_uint()
+        return result
 
-            if not rr.isError():
-                res = BinaryPayloadDecoder.fromRegisters(
-                    rr.registers, Endian.BIG, Endian.LITTLE
-                ).decode_16bit_uint()
-
-                self.modbus_client.close()
-                return res
-
-        except Exception as e:
-            raise ValueError(
-                "An error occured while polling the total installed capacity. Please check your connection"
-                )
-        
     def get_error_code_modbus(self):
-        try:
-            self.connect()
-            rr = self.modbus_client.read_holding_registers(1072, 1, slave=255)
 
-            if not rr.isError():
-                res = BinaryPayloadDecoder.fromRegisters(
-                    rr.registers, Endian.BIG, Endian.LITTLE
-                ).decode_16bit_uint()
-
-                self.modbus_client.close()
-                return res
-
-        except Exception as e:
-            raise ValueError(
-                "An error occured while polling the error code. Please check your connection"
-                )
+        registers = self._get_value_modbus(1072, 1)
+        result = BinaryPayloadDecoder.fromRegisters(
+            registers, Endian.BIG, Endian.LITTLE
+        ).decode_16bit_uint()
+        return result
 
     def get_grid_power_modbus(self):
         # Retrieves the current grid power measured at household grid connection point
         # Supported on VARTA element, pulse, pulse neo, link and flex storage devices
 
+        registers = self._get_value_modbus(1078, 1)
+        result = BinaryPayloadDecoder.fromRegisters(
+            registers, Endian.BIG, Endian.LITTLE
+        ).decode_16bit_int()
+        return result
+
+    def _get_value_modbus(self, address, count):
+        if not self.modbus_client.is_socket_open():
+            self.modbus_client.connect()
+
         try:
-            self.connect()
-            rr = self.modbus_client.read_holding_registers(1078, 1, slave=255)
-
-            if not rr.isError():
-                res = BinaryPayloadDecoder.fromRegisters(
-                    rr.registers, Endian.BIG, Endian.LITTLE
-                ).decode_16bit_int()
-
-                self.modbus_client.close()
-                return res
-
-        except Exception as e:
+            rr = self.modbus_client.read_holding_registers(
+                address, count, slave=self._slave
+            )
+        except ModbusException as exc:
             raise ValueError(
-                "An error occured while polling grid power. Please check your connection"
-                )
+                f"An error occured while polling adress {address}. Please check your connection."
+            ) from exc
+
+        if rr.isError():
+            raise ValueError(
+                f"An error occured while polling adress {address}. This might be an issue with your device."
+            )
+
+        return rr.registers
 
     def get_energy_cgi(self):
         result = {
@@ -330,7 +248,9 @@ class Client(object):
                 values = re.compile("([a-zA-Z0-9_]+) = ([0-9]+)")
                 results = values.findall(response.text)
                 for resultValue in results:
-                    result[resultValue[0]] = resultValue[1].replace("]", "").replace("[", "")
+                    result[resultValue[0]] = (
+                        resultValue[1].replace("]", "").replace("[", "")
+                    )
 
         except Exception as e:
             raise ValueError(
@@ -409,9 +329,9 @@ class Client(object):
             response = self.request_data("/cgi/user_serv.js")
             if response.status_code == 200:
                 result = {
-                "FilterZeit": int(response.text.split(';\n')[0].split('= ')[1]),
-                "Fan": int(response.text.split(';\n')[1].split('= ')[1]),
-                "Main": int(response.text.split(';\n')[2].split('= ')[1]),
+                    "FilterZeit": int(response.text.split(";\n")[0].split("= ")[1]),
+                    "Fan": int(response.text.split(";\n")[1].split("= ")[1]),
+                    "Main": int(response.text.split(";\n")[2].split("= ")[1]),
                 }
 
         except Exception as e:
@@ -419,7 +339,7 @@ class Client(object):
                 "An error occured while polling the maintenance CGI. Please check your connection"
             )
         return result
-    
+
     def request_data(self, urlEnding):
         try:
             url = "http://" + self.modbus_host + urlEnding
@@ -444,9 +364,9 @@ class Client(object):
         response = self.session.get(pass_url, timeout=3)
         if response.status_code != 200:
             # Trouble connecting - raise error
-                raise ValueError(
-                    "An error occured while polling the maintenance CGI. Login didn't work"
-                )
+            raise ValueError(
+                "An error occured while polling the maintenance CGI. Login didn't work"
+            )
         values = re.compile("userlevel = ([0-9]+)")
         results = values.findall(response.text)
         if results[0] != "2":
