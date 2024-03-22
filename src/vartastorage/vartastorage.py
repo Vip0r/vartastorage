@@ -6,9 +6,8 @@ class VartaStorage:
     def __init__(self, modbus_host, modbus_port, username=None, password=None):
         # connect to modbus server
         self.modbus_client = ModbusClient(modbus_host, modbus_port)
-        self.chi_client = None
-        if username and password:
-            self.cgi_client = CgiClient(modbus_host, username, password)
+        # connect to cgi
+        self.cgi_client = CgiClient(modbus_host, username, password)
 
     def get_all_data_modbus(self):
         # get all known registers
@@ -113,12 +112,12 @@ class VartaStorage:
         self.grid_power = self.modbus_client.get_grid_power_modbus()
         self.calculate_to_from_grid()
 
-    def get_serial_cgi(self):
+    def get_info_cgi(self):
         # get serial of device using xml api
         # (modbus registers are not documented properly)
         # Supported on VARTA element, pulse, pulse neo, link and flex storage devices
 
-        self.serial = self.cgi_client.get_service_cgi()
+        self.serial = self.cgi_client.get_info_cgi()
 
     def get_energy_cgi(self):
         # get energy values and charge load cycles from CGI

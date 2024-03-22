@@ -147,6 +147,20 @@ class CgiClient:
             raise ValueError(ERROR_TEMPLATE.format("maintainance CGI")) from e
         return result
 
+    def get_info_cgi(self):
+        # get various informations by the cgi/info.js
+        result = {
+            "Serial": 0,
+        }
+        try:
+            response = self.request_data("/cgi/info.js")
+            if response.status_code == 200:
+                result = {"Serial": str(response.text.split(";\n")[0].split("= ")[1])}
+
+        except Exception as e:
+            raise ValueError(ERROR_TEMPLATE.format("maintainance CGI")) from e
+        return result
+
     def request_data(self, urlEnding):
         try:
             url = "http://" + self.host + urlEnding
