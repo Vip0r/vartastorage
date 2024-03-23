@@ -8,7 +8,7 @@ from requests import Response, Session
 ERROR_TEMPLATE = "An error occured while polling {}. Please check your connection"
 
 JS_PATTERN_ANY = re.compile("([a-zA-Z0-9_]+) = (.+)?;")
-JS_PATTERN_NUMBERS = re.compile("([a-zA-Z0-9_]+) = ([0-9\\[\\]]+)?;")
+JS_PATTERN_NUMBERS = re.compile("([a-zA-Z0-9_]+) = (-?[0-9\\[\\]]+)?;")
 
 
 @dataclass
