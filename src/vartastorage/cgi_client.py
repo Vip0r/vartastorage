@@ -7,8 +7,8 @@ from requests import Response, Session
 
 ERROR_TEMPLATE = "An error occured while polling {}. Please check your connection"
 
-JS_PATTERN_ANY = re.compile("([a-zA-Z0-9_]+) = (.+)?;")
-JS_PATTERN_NUMBERS = re.compile("([a-zA-Z0-9_]+) = (-?[0-9\\[\\]]+)?;")
+JS_PATTERN_ANY = re.compile("([a-zA-Z0-9_]+) = (.+);")
+JS_PATTERN_NUMBERS = re.compile("([a-zA-Z0-9_]+) = (\\[?-?[0-9]+\\]?);")
 
 
 @dataclass
@@ -33,12 +33,6 @@ class CgiClient:
 
     def get_all_data_cgi(self) -> CgiData:
         out = CgiData()
-
-        print(self.get_ems_cgi())
-        print(self.get_energy_cgi())
-        print(self.get_info_cgi())
-        print(self.get_service_cgi())
-
         try:
             energytotals = self.get_energy_cgi()
             out.EGrid_AC_DC = energytotals.get("EGrid_AC_DC", 0)
@@ -107,7 +101,9 @@ class CgiClient:
 
     def get_info_cgi(self) -> Dict[str, str]:
         # get various informations by the cgi/info.js
-        return self._get_cgi_as_dict("/cgi/info.js", JS_PATTERN_ANY)
+        result = self._get_cgi_as_dict("/cgi/info.js", JS_PATTERN_ANY)
+        # Some values have additional quotes that should be removed
+        return {key: value.replace('"', "") for key, value in result.items()}
 
     def _get_cgi_as_dict(self, path: str, pattern: re.Pattern[str]) -> Dict[str, str]:
         result = {}
@@ -117,7 +113,6 @@ class CgiClient:
 
             results = pattern.findall(response.text)
             result = {resultValue[0]: resultValue[1] for resultValue in results}
-
         except Exception as e:
             raise ValueError(ERROR_TEMPLATE.format(path)) from e
 
