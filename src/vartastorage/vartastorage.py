@@ -12,22 +12,22 @@ class VartaStorage:
     def get_all_data_modbus(self):
         # get all known registers
         data = self.modbus_client.get_all_data_modbus()
-        self.grid_power = data["grid_power"]
+        self.grid_power = data.grid_power
         # create dedicated properties (grid consumption and grid supply)
         self.calculate_to_from_grid()
-        self.soc = data["soc"]
-        self.state = data["state"]
+        self.soc = data.soc
+        self.state = data.state
         # interpret state value into a human readbale string
         self.interpret_state()
-        self.active_power = data["active_power"]
+        self.active_power = data.active_power
         # create dedicated properties for charge and discharge
         self.calculate_charge_discharge()
-        self.apparent_power = data["apparent_power"]
-        self.error_code = data["error_code"]
-        self.total_charged_energy = data["total_charged_energy"]
-        self.serial = data["serial"]
-        self.number_modules = data["number_modules"]
-        self.installed_capacity = data["installed_capacity"]
+        self.apparent_power = data.apparent_power
+        self.error_code = data.error_code
+        self.total_charged_energy = data.total_charged_energy
+        self.serial = data.serial
+        self.number_modules = data.number_modules
+        self.installed_capacity = data.installed_capacity
 
     def get_all_data_cgi(self):
         # get all known registers
@@ -173,25 +173,19 @@ class VartaStorage:
         # "BUSY" (e.g. during startup) = 0/ "RUN" (ready to charge / discharge) = 1/
         # "CHARGE" = 2/ "DISCHARGE" = 3/ "STANDBY" = 4 /"ERROR" = 5 /
         # "PASSIVE" (service) = 6/ "ISLANDING" = 7
+        states_map = {
+            0: "BUSY",
+            1: "READY",
+            2: "CHARGE",
+            3: "DISCHARGE",
+            4: "STANDBY",
+            5: "ERROR",
+            6: "SERVICE",
+            7: "ISLANDING",
+        }
+
         if isinstance(self.state, int):
-            if self.state == 0:
-                self.state_text = "BUSY"
-            elif self.state == 1:
-                self.state_text = "READY"
-            elif self.state == 2:
-                self.state_text = "CHARGE"
-            elif self.state == 3:
-                self.state_text = "DISCHARGE"
-            elif self.state == 4:
-                self.state_text = "STANDBY"
-            elif self.state == 5:
-                self.state_text = "ERROR"
-            elif self.state == 6:
-                self.state_text = "SERVICE"
-            elif self.state == 7:
-                self.state_text = "ISLANDING"
-            else:
-                self.state_text = ""
+            self.state_text = states_map.get(self.state, "")
         else:
             self.state_text = None
 
