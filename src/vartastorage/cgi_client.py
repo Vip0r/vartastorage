@@ -1,14 +1,11 @@
 import ast
 import re
 from dataclasses import dataclass
-from typing import Dict
+from typing import Any, Dict
 
 from requests import Response, Session
 
 ERROR_TEMPLATE = "An error occured while polling {}. Please check your connection"
-
-JS_PATTERN_ANY = re.compile("([a-zA-Z0-9_]+) = (.+);")
-JS_PATTERN_NUMBERS = re.compile("([a-zA-Z0-9_]+) = (\\[?-?[0-9]+\\]?);")
 
 
 @dataclass
@@ -24,7 +21,7 @@ class CgiData:
 
 
 class CgiClient:
-    def __init__(self, host, username, password):
+    def __init__(self, host, username=None, password=None):
         self.host = host
         self.username = username
         self.password = password
@@ -53,68 +50,70 @@ class CgiClient:
                 + "Please check your connection"
             ) from e
 
-    def get_energy_cgi(self) -> Dict[str, int]:
+    def get_energy_cgi(self) -> Dict[str, Any]:
         # get energy totals and charge load cycles from CGI
         # "EGrid_AC_DC": 0, "EGrid_DC_AC": 0, "EWr_AC_DC": 0, "EWr_DC_AC": 0,
         # "Chrg_LoadCycles": 0
-        result = {}
-        results_dict = self._get_cgi_as_dict("/cgi/energy.js", JS_PATTERN_NUMBERS)
-        for key, value in results_dict.items():
-            result[key] = int(value.replace("[", "").replace("]", ""))
-        return result
+        return self._get_cgi_as_dict("/cgi/energy.js")
 
-    def get_ems_cgi(self) -> Dict[str, dict]:
+    def get_ems_cgi(self) -> Dict[str, Any]:
         result = {}
 
         conf = {
             key.lower(): value
-            for key, value in self._get_cgi_as_dict(
-                "/cgi/ems_conf.js", JS_PATTERN_ANY
-            ).items()
+            for key, value in self._get_cgi_as_dict("/cgi/ems_conf.js").items()
         }
         data = {
             key.lower(): value
-            for key, value in self._get_cgi_as_dict(
-                "/cgi/ems_data.js", JS_PATTERN_ANY
-            ).items()
+            for key, value in self._get_cgi_as_dict("/cgi/ems_data.js").items()
         }
 
-        for conf_key, value in conf.items():
+        for conf_key, conf_value in conf.items():
             data_key = conf_key.replace("conf", "data")
             if data_key not in data:
                 continue
-            conf_values = ast.literal_eval(value)
-            data_values = ast.literal_eval(data[data_key])
-            if len(conf_values) != len(data_values):
-                continue
-            result[conf_key.replace("_conf", "")] = {
-                conf_values[i]: data_values[i] for i in range(0, len(conf_values))
-            }
+
+            data_value = data[data_key]
+            if len(conf_value) == len(data_value):
+                result[conf_key.replace("_conf", "")] = {
+                    conf_value[i]: data_value[i] for i in range(0, len(conf_value))
+                }
+            elif len(data_value) >= 1 and isinstance(data_value[0], list):
+                # exception for charger values, this is a list of values
+                data_values = []
+                for element in data_value:
+                    if len(conf_value) != len(element):
+                        continue
+                    data_values.append(
+                        {conf_value[i]: element[i] for i in range(0, len(conf_value))}
+                    )
+                result[conf_key.replace("_conf", "")] = data_values
 
         return result
 
-    def get_service_cgi(self) -> Dict[str, int]:
+    def get_service_cgi(self) -> Dict[str, Any]:
         # get service and maintenance data from CGI
         # "FilterZeit": 0, "Fan": 0, "Main": 0
-        result = self._get_cgi_as_dict("/cgi/user_serv.js", JS_PATTERN_NUMBERS)
-        return {key: int(value) for key, value in result.items()}
+        return self._get_cgi_as_dict("/cgi/user_serv.js")
 
-    def get_info_cgi(self) -> Dict[str, str]:
+    def get_info_cgi(self) -> Dict[str, Any]:
         # get various informations by the cgi/info.js
-        result = self._get_cgi_as_dict("/cgi/info.js", JS_PATTERN_ANY)
-        # Some values have additional quotes that should be removed
-        return {key: value.replace('"', "") for key, value in result.items()}
+        return self._get_cgi_as_dict("/cgi/info.js")
 
-    def _get_cgi_as_dict(self, path: str, pattern: re.Pattern[str]) -> Dict[str, str]:
+    def _get_cgi_as_dict(self, path: str) -> Dict[str, Any]:
         result = {}
         try:
             response = self._request_data(path)
             response.raise_for_status()
-
-            results = pattern.findall(response.text)
-            result = {resultValue[0]: resultValue[1] for resultValue in results}
         except Exception as e:
             raise ValueError(ERROR_TEMPLATE.format(path)) from e
+
+        tmp_list = response.text.replace("\n", "").split(";")
+        value_list = [value for value in tmp_list if "=" in value]
+
+        for value in value_list:
+            splitted = value.split("=", 1)
+            result[splitted[0].strip()] = ast.literal_eval(splitted[1].strip())
 
         return result
 
@@ -136,7 +135,7 @@ class CgiClient:
 
         values = re.compile("userlevel = ([0-9]+)")
         results = values.findall(response.text)
-        if results[0] == "2":
+        if "2" in results:
             # already logged in
             return True
 
