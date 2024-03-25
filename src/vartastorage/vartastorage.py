@@ -3,11 +3,16 @@ from vartastorage.modbus_client import ModbusClient
 
 
 class VartaStorage:
-    def __init__(self, modbus_host, modbus_port, username=None, password=None):
-        # connect to modbus server
+    def __init__(
+        self, modbus_host, modbus_port, cgi=True, username=None, password=None
+    ):
+        # initiate modbus client
         self.modbus_client = ModbusClient(modbus_host, modbus_port)
-        # connect to cgi
-        self.cgi_client = CgiClient(modbus_host, username, password)
+        # initiate cgi client if requested
+        if cgi:
+            self.cgi_client = CgiClient(modbus_host, username, password)
+
+    # MODBUS PART
 
     def get_all_data_modbus(self):
         # get all known registers
@@ -28,12 +33,6 @@ class VartaStorage:
         self.serial = data.serial
         self.number_modules = data.number_modules
         self.installed_capacity = data.installed_capacity
-
-    def get_all_data_cgi(self):
-        # get all known registers
-        self.get_energy_cgi()
-        self.get_service_cgi()
-        self.get_ems_cgi()
 
     def get_serial_modbus(self):
         # get serial of device using modbus
@@ -102,7 +101,7 @@ class VartaStorage:
         # Supported on VARTA element, pulse, pulse neo, link and flex storage devices
         # register 1072, size 1, UINT16
 
-        self.apparent_power = self.modbus_client.get_error_code_modbus()
+        self.error_code = self.modbus_client.get_error_code_modbus()
 
     def get_grid_power_modbus(self):
         # grid power in Watt; measured at household grid connection point
@@ -112,62 +111,55 @@ class VartaStorage:
         self.grid_power = self.modbus_client.get_grid_power_modbus()
         self.calculate_to_from_grid()
 
-    def get_info_cgi(self):
-        # get serial of device using xml api
-        # (modbus registers are not documented properly)
-        # Supported on VARTA element, pulse, pulse neo, link and flex storage devices
+    # CGI PART
 
-        self.serial = self.cgi_client.get_info_cgi()
+    def get_all_data_cgi(self):
+        # grab all cgi data
+        try:
+            self.get_info_cgi()
+            self.get_energy_cgi()
+            self.get_service_cgi()
+            self.get_ems_cgi()
+        except AttributeError:
+            return "The CgiClient is not initialized. Please check if you not have set Cgi=False during initialzation"
+
+    def get_info_cgi(self):
+        # get serials and additional infos from the info cgi
+        try:
+            r = self.cgi_client.get_info_cgi()
+            self.set_attributes(r)
+        except AttributeError:
+            return "The CgiClient is not initialized. Please check if you not have set Cgi=False during initialzation"
 
     def get_energy_cgi(self):
         # get energy values and charge load cycles from CGI
-        # EGrid_AC_DC == Grid -> Building (Wh)
-        # EGrid_DC_AC == Home -> Grid (Wh)
-        # EWr_AC_DC == Inverter AC -> DC == Total Charged (Wh)
-        # EWr_DC_AC == Inverter DC -> AC == Total Discharged (Wh)
-        # Chrg_LoadCycles == Charge Cycle Counter
-        energycgidata = self.cgi_client.get_energy_cgi()
-        self.grid_to_home = energycgidata["EGrid_AC_DC"]
-        self.home_to_grid = energycgidata["EGrid_DC_AC"]
-        self.inverter_total_charged = energycgidata["EWr_AC_DC"]
-        self.inverter_total_discharged = energycgidata["EWr_DC_AC"]
-        self.charge_cycle_counter = energycgidata["Chrg_LoadCycles"]
+        try:
+            r = self.cgi_client.get_energy_cgi()
+            self.set_attributes(r)
+        except AttributeError:
+            return "The CgiClient is not initialized. Please check if you not have set Cgi=False during initialzation"
 
     def get_service_cgi(self):
         # get values from maintenance CGI
-        # hours_until_filter_maintenance
-        # fan state
-        # main is now yet known / undocumented
-        servicecgidata = self.cgi_client.get_service_cgi()
-        self.hours_until_filter_maintenance = servicecgidata["FilterZeit"]
-        self.fan = servicecgidata["Fan"]
-        self.main = servicecgidata["Main"]
+        try:
+            r = self.cgi_client.get_service_cgi()
+            self.set_attributes(r)
+        except AttributeError:
+            return "The CgiClient is not initialized. Please check if you not have set Cgi=False during initialzation"
 
     def get_ems_cgi(self):
         # get ems values
-        emscgidata = self.cgi_client.get_ems_cgi()
-        self.FNetz = emscgidata["FNetz"]
-        self.U_V_L1 = emscgidata["U_V_L1"]
-        self.U_V_L2 = emscgidata["U_V_L2"]
-        self.U_V_L3 = emscgidata["U_V_L3"]
-        self.Iw_V_L1 = emscgidata["Iw_V_L1"]
-        self.Iw_V_L2 = emscgidata["Iw_V_L2"]
-        self.Iw_V_L3 = emscgidata["Iw_V_L3"]
-        self.Ib_V_L1 = emscgidata["Ib_V_L1"]
-        self.Ib_V_L2 = emscgidata["Ib_V_L2"]
-        self.Ib_V_L3 = emscgidata["Ib_V_L3"]
-        self.Is_V_L1 = emscgidata["Is_V_L1"]
-        self.Is_V_L2 = emscgidata["Is_V_L2"]
-        self.Is_V_L3 = emscgidata["Is_V_L3"]
-        self.Iw_PV_L1 = emscgidata["Iw_PV_L1"]
-        self.Iw_PV_L2 = emscgidata["Iw_PV_L2"]
-        self.Iw_PV_L3 = emscgidata["Iw_PV_L3"]
-        self.Ib_PV_L1 = emscgidata["Ib_PV_L1"]
-        self.Ib_PV_L2 = emscgidata["Ib_PV_L2"]
-        self.Ib_PV_L3 = emscgidata["Ib_PV_L3"]
-        self.Is_PV_L1 = emscgidata["Is_PV_L1"]
-        self.Is_PV_L2 = emscgidata["Is_PV_L2"]
-        self.Is_PV_L3 = emscgidata["Is_PV_L3"]
+        try:
+            r = self.cgi_client.get_ems_cgi()
+            self.set_attributes(r)
+        except AttributeError:
+            return "The CgiClient is not initialized. Please check if you not have set Cgi=False during initialzation"
+
+    def set_attributes(self, data):
+        for key, value in data.items():
+            setattr(self, key.lower(), value)
+
+    # INTERPRETATIONS
 
     def interpret_state(self):
         # "BUSY" (e.g. during startup) = 0/ "RUN" (ready to charge / discharge) = 1/
