@@ -17,6 +17,9 @@ varta = VartaStorage('10.0.2.3',502)
 # user1 is for some varta devices a standard user
 varta = VartaStorage('10.0.2.3', 502, username="user1", password="yourpassword")
 
+# the CGI endpoints are covered by default. You can only use the modbus part as well
+varta = VartaStorage("10.0.2.3",502,cgi=False)
+
 # update all values provided by modbus server
 varta.get_all_data_modbus()
 
