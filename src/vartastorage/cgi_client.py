@@ -1,6 +1,6 @@
 import ast
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Dict
 
 from requests import Response, Session
@@ -10,10 +10,10 @@ ERROR_TEMPLATE = "An error occured while polling {}. Please check your connectio
 
 @dataclass
 class CgiData:
-    info: dict = {}
-    service: dict = {}
-    ems: dict = {}
-    energy: dict = {}
+    info: dict = field(default_factory=dict)
+    service: dict = field(default_factory=dict)
+    ems: dict = field(default_factory=dict)
+    energy: dict = field(default_factory=dict)
 
 
 class CgiClient:
