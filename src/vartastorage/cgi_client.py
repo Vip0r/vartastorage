@@ -10,14 +10,10 @@ ERROR_TEMPLATE = "An error occured while polling {}. Please check your connectio
 
 @dataclass
 class CgiData:
-    EGrid_AC_DC: int = 0
-    EGrid_DC_AC: int = 0
-    EWr_AC_DC: int = 0
-    EWr_DC_AC: int = 0
-    Chrg_LoadCycles: int = 0
-    FilterZeit: int = 0
-    Fan: int = 0
-    Main: int = 0
+    info: dict = {}
+    service: dict = {}
+    ems: dict = {}
+    energy: dict = {}
 
 
 class CgiClient:
@@ -30,25 +26,11 @@ class CgiClient:
 
     def get_all_data_cgi(self) -> CgiData:
         out = CgiData()
-        try:
-            energytotals = self.get_energy_cgi()
-            out.EGrid_AC_DC = energytotals.get("EGrid_AC_DC", 0)
-            out.EGrid_DC_AC = energytotals.get("EGrid_DC_AC", 0)
-            out.EWr_AC_DC = energytotals.get("EWr_AC_DC", 0)
-            out.EWr_DC_AC = energytotals.get("EWr_DC_AC", 0)
-            out.Chrg_LoadCycles = energytotals.get("Chrg_LoadCycles", 0)
-
-            servicedata = self.get_service_cgi()
-            out.FilterZeit = servicedata.get("FilterZeit", 0)
-            out.Fan = servicedata.get("Fan", 0)
-            out.Main = servicedata.get("Main", 0)
-
-            return out
-        except Exception as e:
-            raise ValueError(
-                "An error occured while trying to poll all data fields."
-                + "Please check your connection"
-            ) from e
+        out.energy = self.get_energy_cgi()
+        out.service = self.get_service_cgi()
+        out.ems = self.get_ems_cgi()
+        out.info = self.get_info_cgi()
+        return out
 
     def get_energy_cgi(self) -> Dict[str, Any]:
         # get energy totals and charge load cycles from CGI

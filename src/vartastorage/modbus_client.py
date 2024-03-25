@@ -5,10 +5,6 @@ from pymodbus.constants import Endian
 from pymodbus.exceptions import ModbusException
 from pymodbus.payload import BinaryPayloadDecoder
 
-ERROR_STRING = (
-    "An error occured while trying to poll all data fields."
-    + "Please check your connection"
-)
 ERROR_TEMPLATE = (
     "An error occured while polling adress {}."
     + "This might be an issue with your device."
@@ -48,20 +44,17 @@ class ModbusClient:
 
     def get_all_data_modbus(self) -> ModbusData:
         out = ModbusData()
-        try:
-            out.soc = self.get_soc_modbus()
-            out.grid_power = self.get_grid_power_modbus()
-            out.state = self.get_state_modbus()
-            out.active_power = self.get_active_power_modbus()
-            out.apparent_power = self.get_apparent_power_modbus()
-            out.error_code = self.get_error_code_modbus()
-            out.number_modules = self.get_bm_modbus()
-            out.installed_capacity = self.get_installed_capacity_modbus()
-            out.total_charged_energy = self.get_total_charged_energy_modbus()
-            out.serial = self.get_serial_modbus()
-            return out
-        except Exception as e:
-            raise ValueError(ERROR_STRING) from e
+        out.soc = self.get_soc_modbus()
+        out.grid_power = self.get_grid_power_modbus()
+        out.state = self.get_state_modbus()
+        out.active_power = self.get_active_power_modbus()
+        out.apparent_power = self.get_apparent_power_modbus()
+        out.error_code = self.get_error_code_modbus()
+        out.number_modules = self.get_bm_modbus()
+        out.installed_capacity = self.get_installed_capacity_modbus()
+        out.total_charged_energy = self.get_total_charged_energy_modbus()
+        out.serial = self.get_serial_modbus()
+        return out
 
     def get_serial_modbus(self) -> str:
         # Retrieves the Serial Number of the device
