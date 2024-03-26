@@ -39,6 +39,8 @@ class CgiClient:
         return self._get_cgi_as_dict("/cgi/energy.js")
 
     def get_ems_cgi(self) -> Dict[str, Any]:
+        # get ems data structure
+        # usually a dict of 'wr': {...}, 'charger': [{...}], 'emeter': {...}, 'na': {}
         result = {}
 
         conf = {

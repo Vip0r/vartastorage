@@ -35,22 +35,27 @@ class VartaStorage:
     ):
         # connect to modbus server
         self.modbus_client = ModbusClient(modbus_host, modbus_port)
+
         # connect to cgi
-        if cgi == True:
+        if cgi:
             self.cgi_client = CgiClient(modbus_host, username, password)
 
     def get_all_data_modbus(self):
         out = VartaStorageData
         res = self.get_raw_data_modbus()
+
+        calc_grid_power = self._calculate_to_from_grid(res.grid_power)
+        calc_charge_power = self._calculate_charge_discharge(res.active_power)
+
         out.soc = res.soc
         out.grid_power = res.grid_power
-        out.to_grid_power = self._calculate_to_from_grid(res.grid_power)[0]
-        out.from_grid_power = self._calculate_to_from_grid(res.grid_power)[1]
+        out.to_grid_power = calc_grid_power[0]
+        out.from_grid_power = calc_grid_power[1]
         out.state = res.state
         out.state_text = self._interpret_state(state=res.state)
         out.active_power = res.active_power
-        out.charge_power = self._calculate_charge_discharge(res.active_power)[0]
-        out.discharge_power = self._calculate_charge_discharge(res.active_power)[1]
+        out.charge_power = calc_charge_power[0]
+        out.discharge_power = calc_charge_power[1]
         out.apparent_power = res.apparent_power
         out.error_code = res.error_code
         out.total_charged_energy = res.total_charged_energy
@@ -63,56 +68,41 @@ class VartaStorage:
         # get all known registers
         return self.modbus_client.get_all_data_modbus()
 
-    def get_state_modbus(self):
-        # state of system
-        return self._interpret_state(self.modbus_client.get_state_modbus())
-
-    def get_charge_power_modbus(self):
-        # active power in Watt; measured at internal inverter;
-        # positive:charge; negative:discharge;
-        return self._calculate_charge_discharge(
-            self.modbus_client.get_active_power_modbus()
-        )
-
-    def get_grid_power_modbus(self):
-        # grid power in Watt; measured at household grid connection point
-        return self._calculate_to_from_grid(self.modbus_client.get_grid_power_modbus())
-
     def get_info_cgi(self):
         # get serial of device using xml ap
-        try:
-            info = self.cgi_client.get_info_cgi()
-            # TODO: convert info into dataclasses
-            return info
-        except AttributeError:
+        if self.cgi_client is None:
             raise ValueError(CGI_ERR)
+
+        info = self.cgi_client.get_info_cgi()
+        # TODO: convert info into dataclasses
+        return info
 
     def get_energy_cgi(self):
         # get energy values and charge load cycles from CGI
-        try:
-            energy = self.cgi_client.get_energy_cgi()
-            # TODO: convert energy into dataclasses
-            return energy
-        except AttributeError:
+        if self.cgi_client is None:
             raise ValueError(CGI_ERR)
+
+        energy = self.cgi_client.get_energy_cgi()
+        # TODO: convert energy into dataclasses
+        return energy
 
     def get_service_cgi(self):
         # get values from maintenance CGI
-        try:
-            service = self.cgi_client.get_service_cgi()
-            # TODO: convert service into dataclasses
-            return service
-        except AttributeError:
+        if self.cgi_client is None:
             raise ValueError(CGI_ERR)
+
+        service = self.cgi_client.get_service_cgi()
+        # TODO: convert service into dataclasses
+        return service
 
     def get_ems_cgi(self):
         # get ems values
-        try:
-            ems = self.cgi_client.get_ems_cgi()
-            # TODO: convert ems into dataclasses
-            return ems
-        except AttributeError:
+        if self.cgi_client is None:
             raise ValueError(CGI_ERR)
+
+        ems = self.cgi_client.get_ems_cgi()
+        # TODO: convert ems into dataclasses
+        return ems
 
     @staticmethod
     def _interpret_state(state: int) -> str:
