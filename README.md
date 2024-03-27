@@ -21,15 +21,12 @@ varta = VartaStorage('10.0.2.3', 502, username="user1", password="yourpassword")
 varta = VartaStorage("10.0.2.3",502,cgi=False)
 
 # update all values provided by modbus server
-varta.get_all_data_modbus()
+r = varta.get_all_data_modbus()
 
 # show current grid power
-print(varta.grid_power)
-
-# update only state of charge
-varta.get_soc()
+print(r.grid_power)
 
 # show battery SoC
-print(varta.soc)
+print(r.soc)
 
 ```

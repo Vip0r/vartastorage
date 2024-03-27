@@ -6,7 +6,7 @@ from pymodbus.exceptions import ModbusException
 from pymodbus.payload import BinaryPayloadDecoder
 
 ERROR_TEMPLATE = (
-    "An error occured while polling adress {}."
+    "An error occured while polling address {}. "
     + "This might be an issue with your device."
 )
 
