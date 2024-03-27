@@ -14,7 +14,7 @@ setuptools.setup(
     package_dir={"": "src"},
     packages=setuptools.find_packages(where="src"),
     zip_safe=False,
-    python_requires=">=3.5",
+    python_requires=">=3.11",
     install_requires=[
         "pymodbus",
         "requests",

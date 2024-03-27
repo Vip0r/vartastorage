@@ -1,7 +1,7 @@
 import ast
 import re
 from dataclasses import dataclass, field
-from typing import Any, Dict
+from typing import Any
 
 from requests import Response, Session
 
@@ -32,16 +32,16 @@ class CgiClient:
         out.info = self.get_info_cgi()
         return out
 
-    def get_energy_cgi(self) -> Dict[str, Any]:
+    def get_energy_cgi(self) -> dict[str, Any]:
         # get energy totals and charge load cycles from CGI
         # "EGrid_AC_DC": 0, "EGrid_DC_AC": 0, "EWr_AC_DC": 0, "EWr_DC_AC": 0,
         # "Chrg_LoadCycles": 0
         return self._get_cgi_as_dict("/cgi/energy.js")
 
-    def get_ems_cgi(self) -> Dict[str, Any]:
+    def get_ems_cgi(self) -> dict[str, Any]:
         # get ems data structure
         # usually a dict of 'wr': {...}, 'charger': [{...}], 'emeter': {...}, 'na': {}
-        result = {}
+        result: dict[str, Any] = {}
 
         conf = {
             key.lower(): value
@@ -64,7 +64,7 @@ class CgiClient:
                 }
             elif len(data_value) >= 1 and isinstance(data_value[0], list):
                 # exception for charger values, this is a list of values
-                data_values = []
+                data_values: list[dict[str, Any]] = []
                 for element in data_value:
                     if len(conf_value) != len(element):
                         continue
@@ -75,16 +75,16 @@ class CgiClient:
 
         return result
 
-    def get_service_cgi(self) -> Dict[str, Any]:
+    def get_service_cgi(self) -> dict[str, Any]:
         # get service and maintenance data from CGI
         # "FilterZeit": 0, "Fan": 0, "Main": 0
         return self._get_cgi_as_dict("/cgi/user_serv.js")
 
-    def get_info_cgi(self) -> Dict[str, Any]:
+    def get_info_cgi(self) -> dict[str, Any]:
         # get various informations by the cgi/info.js
         return self._get_cgi_as_dict("/cgi/info.js")
 
-    def _get_cgi_as_dict(self, path: str) -> Dict[str, Any]:
+    def _get_cgi_as_dict(self, path: str) -> dict[str, Any]:
         result = {}
         try:
             response = self._request_data(path)
