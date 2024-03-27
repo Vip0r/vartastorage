@@ -1,12 +1,15 @@
 # Vartastorage
+
 With this Python module you can read modbus registers and xml api values from various VARTA batteries.
 Tested on my VARTA element/12 battery.
 Should work for other VARTA element, pulse, pulse neo, link and flex storage devices as well.
 
 ## Setup
+
 pip3 install vartastorage
 
 ## Usage
+
 ```python
 from vartastorage.vartastorage import VartaStorage
 
@@ -18,15 +21,17 @@ varta = VartaStorage('10.0.2.3',502)
 varta = VartaStorage('10.0.2.3', 502, username="user1", password="yourpassword")
 
 # the CGI endpoints are covered by default. You can only use the modbus part as well
-varta = VartaStorage("10.0.2.3",502,cgi=False)
+varta = VartaStorage("10.0.2.3", 502, cgi=False)
 
 # update all values provided by modbus server
-r = varta.get_all_data_modbus()
+all_data = varta.get_all_data()
+
+# update all values provided by modbus server
+modbus_data = varta.get_all_data_modbus()
 
 # show current grid power
-print(r.grid_power)
+print(modbus_data.grid_power)
 
 # show battery SoC
-print(r.soc)
-
+print(modbus_data.soc)
 ```
