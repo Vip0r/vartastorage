@@ -3,8 +3,9 @@ from typing import Tuple
 
 from vartastorage.cgi_client import CgiClient
 from vartastorage.cgi_data import (
+    BattData,
+    ChargerData,
     EMeterData,
-    EmsData,
     EnergyData,
     EnsData,
     InfoData,
@@ -24,6 +25,16 @@ class BaseData(ModbusData):
     from_grid_power: int = 0
     charge_power: int = 0
     discharge_power: int = 0
+
+
+@dataclass
+class EmsData:
+    # /cgi/ems_datajs data
+    wr_data: WrData | None = None
+    emeter_data: EMeterData | None = None
+    ens_data: EnsData | None = None
+    charger_data: ChargerData | None = None
+    batt_data: BattData | None = None
 
 
 @dataclass

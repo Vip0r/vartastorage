@@ -1,49 +1,49 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 
 @dataclass
 class InfoData:
     # /cgi/info.js data
-    device_description: str | None = None
-    display_serial: str | None = None
-    sw_id_ems: int | None = None
-    hw_id_ems: int | None = None
-    countrycode: int | None = None
-    sw_version_ems: str | None = None
-    anz_charger: int | None = None
-    soll_charger: int | None = None
-    serial_emeter: str | None = None
-    mac_emeter: str | None = None
-    sw_version_emeter: str | None = None
-    bl_version_emeter: str | None = None
-    hw_id_emeter: int | None = None
-    serial_wr: str | None = None
-    mac_wr: int | None = None
-    sw_id_wr: int | None = None
-    hw_id_wr: int | None = None
-    sw_version_wr: str | None = None
-    bl_version_wr: str | None = None
-    serial_ens: str | None = None
-    mac_ens: int | None = None
-    sw_id_ens: int | None = None
-    hw_id_ens: int | None = None
-    sw_version_ens: str | None = None
-    bl_version_ens: str | None = None
-    charger_serial: list[str] = field(default_factory=list)
-    charger_mac: list[str] = field(default_factory=list)
-    sw_id_charger: list[int] = field(default_factory=list)
-    hw_id_charger: list[int] = field(default_factory=list)
-    sw_version_charger: list[str] = field(default_factory=list)
-    bl_version_charger: list[str] = field(default_factory=list)
-    p_ems_max: int | None = None
-    p_ems_maxdisc: int | None = None
-    battery_sw: list[str] = field(default_factory=list)
-    battery_hw: list[str] = field(default_factory=list)
-    battery_serial: list[str] = field(default_factory=list)
-    bm_update: list[str] = field(default_factory=list)
-    bm_update_sw: list[str] = field(default_factory=list)
-    bm_production: list[str] = field(default_factory=list)
-    lg_battery_serial: list[str] = field(default_factory=list)
+    device_description: str | None
+    display_serial: str | None
+    sw_id_ems: int | None
+    hw_id_ems: int | None
+    countrycode: int | None
+    sw_version_ems: str | None
+    anz_charger: int | None
+    soll_charger: int | None
+    serial_emeter: str | None
+    mac_emeter: str | None
+    sw_version_emeter: str | None
+    bl_version_emeter: str | None
+    hw_id_emeter: int | None
+    serial_wr: str | None
+    mac_wr: int | None
+    sw_id_wr: int | None
+    hw_id_wr: int | None
+    sw_version_wr: str | None
+    bl_version_wr: str | None
+    serial_ens: str | None
+    mac_ens: int | None
+    sw_id_ens: int | None
+    hw_id_ens: int | None
+    sw_version_ens: str | None
+    bl_version_ens: str | None
+    charger_serial: list[str]
+    charger_mac: list[str]
+    sw_id_charger: list[int]
+    hw_id_charger: list[int]
+    sw_version_charger: list[str]
+    bl_version_charger: list[str]
+    p_ems_max: int | None
+    p_ems_maxdisc: int | None
+    battery_sw: list[str]
+    battery_hw: list[str]
+    battery_serial: list[str]
+    bm_update: list[str]
+    bm_update_sw: list[str]
+    bm_production: list[str]
+    lg_battery_serial: list[str]
 
     @classmethod
     def from_dict(cls, info: dict) -> "InfoData":
@@ -94,11 +94,11 @@ class InfoData:
 @dataclass
 class EnergyData:
     # /cgi/energy.js data
-    total_grid_ac_dc: int | None = None  # Wh
-    total_grid_dc_ac: int | None = None  # Wh
-    total_inverter_ac_dc: int | None = None  # Wh
-    total_inverter_dc_ac: int | None = None  # Wh
-    total_charge_cycles: list[int] = field(default_factory=list)
+    total_grid_ac_dc: int | None  # Wh
+    total_grid_dc_ac: int | None  # Wh
+    total_inverter_ac_dc: int | None  # Wh
+    total_inverter_dc_ac: int | None  # Wh
+    total_charge_cycles: list[int]
 
     @classmethod
     def from_dict(cls, energy: dict) -> "EnergyData":
@@ -114,9 +114,9 @@ class EnergyData:
 @dataclass
 class ServiceData:
     # /cgi/user_serv.js data
-    hours_until_filter_maintenance: int | None = None  # Hours
-    status_fan: int | None = None
-    status_main: int | None = None
+    hours_until_filter_maintenance: int | None  # Hours
+    status_fan: int | None
+    status_main: int | None
 
     @classmethod
     def from_dict(cls, service: dict) -> "ServiceData":
@@ -129,26 +129,26 @@ class ServiceData:
 
 @dataclass
 class WrData:
-    nominal_power: int | None = None  # W
-    u_verbund_l1: int | None = None  # V
-    u_verbund_l2: int | None = None  # V
-    u_verbund_l3: int | None = None  # V
-    i_verbund_l1: int | None = None  # A
-    i_verbund_l2: int | None = None  # A
-    i_verbund_l3: int | None = None  # A
-    u_insel_l1: int | None = None  # V
-    u_insel_l2: int | None = None  # V
-    u_insel_l3: int | None = None  # V
-    i_insel_l1: int | None = None  # A
-    i_insel_l2: int | None = None  # A
-    i_insel_l3: int | None = None  # A
-    temp_l1: int | None = None  # Celcius
-    temp_l2: int | None = None  # Celcius
-    temp_l3: int | None = None  # Celcius
-    temp_board: int | None = None  # Celcius
-    frequency_grid: int | None = None  # Hz
-    online_status: int | None = None  # 0=Offline, 1=Online
-    fan_speed: int | None = None  # percentage
+    nominal_power: int | None  # W
+    u_verbund_l1: int | None  # V
+    u_verbund_l2: int | None  # V
+    u_verbund_l3: int | None  # V
+    i_verbund_l1: int | None  # A
+    i_verbund_l2: int | None  # A
+    i_verbund_l3: int | None  # A
+    u_insel_l1: int | None  # V
+    u_insel_l2: int | None  # V
+    u_insel_l3: int | None  # V
+    i_insel_l1: int | None  # A
+    i_insel_l2: int | None  # A
+    i_insel_l3: int | None  # A
+    temp_l1: int | None  # Celcius
+    temp_l2: int | None  # Celcius
+    temp_l3: int | None  # Celcius
+    temp_board: int | None  # Celcius
+    frequency_grid: int | None  # Hz
+    online_status: int | None  # 0=Offline, 1=Online
+    fan_speed: int | None  # percentage
 
     @classmethod
     def from_dict(cls, wr: dict) -> "WrData":
@@ -178,29 +178,29 @@ class WrData:
 
 @dataclass
 class EMeterData:
-    f_netz: int | None = None
-    sens_state: int | None = None
-    u_v_l1: int | None = None
-    u_v_l2: int | None = None
-    u_v_l3: int | None = None
-    iw_v_l1: int | None = None
-    iw_v_l2: int | None = None
-    iw_v_l3: int | None = None
-    ib_v_l1: int | None = None
-    ib_v_l2: int | None = None
-    ib_v_l3: int | None = None
-    is_v_l1: int | None = None
-    is_v_l2: int | None = None
-    is_v_l3: int | None = None
-    iw_pv_l1: int | None = None
-    iw_pv_l2: int | None = None
-    iw_pv_l3: int | None = None
-    ib_pv_l1: int | None = None
-    ib_pv_l2: int | None = None
-    ib_pv_l3: int | None = None
-    is_pv_l1: int | None = None
-    is_pv_l2: int | None = None
-    is_pv_l3: int | None = None
+    f_netz: int | None
+    sens_state: int | None
+    u_v_l1: int | None
+    u_v_l2: int | None
+    u_v_l3: int | None
+    iw_v_l1: int | None
+    iw_v_l2: int | None
+    iw_v_l3: int | None
+    ib_v_l1: int | None
+    ib_v_l2: int | None
+    ib_v_l3: int | None
+    is_v_l1: int | None
+    is_v_l2: int | None
+    is_v_l3: int | None
+    iw_pv_l1: int | None
+    iw_pv_l2: int | None
+    iw_pv_l3: int | None
+    ib_pv_l1: int | None
+    ib_pv_l2: int | None
+    ib_pv_l3: int | None
+    is_pv_l1: int | None
+    is_pv_l2: int | None
+    is_pv_l3: int | None
 
     @classmethod
     def from_dict(cls, emeter: dict) -> "EMeterData":
@@ -233,10 +233,10 @@ class EMeterData:
 
 @dataclass
 class EnsData:
-    f_netz: int | None = None
-    u_v_l1: int | None = None
-    u_v_l2: int | None = None
-    u_v_l3: int | None = None
+    f_netz: int | None
+    u_v_l1: int | None
+    u_v_l2: int | None
+    u_v_l3: int | None
 
     @classmethod
     def from_dict(cls, ens: dict) -> "EnsData":
@@ -258,13 +258,3 @@ class ChargerData:
 class BattData:
     # TODO
     pass
-
-
-@dataclass
-class EmsData:
-    # /cgi/ems_datajs data
-    wr_data: WrData | None = None
-    emeter_data: EMeterData | None = None
-    ens_data: EnsData | None = None
-    charger_data: ChargerData | None = None
-    batt_data: BattData | None = None
