@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Tuple
 
 from vartastorage.cgi_client import CgiClient
 from vartastorage.cgi_data import (
@@ -159,7 +158,7 @@ class VartaStorage:
         return states_map.get(state, "")
 
     @staticmethod
-    def _calculate_to_from_grid(grid_power: int) -> Tuple[int, int]:
+    def _calculate_to_from_grid(grid_power: int) -> tuple[int, int]:
         to_grid = 0
         from_grid = 0
 
@@ -171,7 +170,7 @@ class VartaStorage:
         return (to_grid, from_grid)
 
     @staticmethod
-    def _calculate_charge_discharge(active_power) -> Tuple[int, int]:
+    def _calculate_charge_discharge(active_power) -> tuple[int, int]:
         charge_power = 0
         discharge_power = 0
 
