@@ -2,7 +2,16 @@ from dataclasses import dataclass
 from typing import Tuple
 
 from vartastorage.cgi_client import CgiClient
-from vartastorage.cgi_data import EmsData, EnergyData, InfoData, ServiceData, WrData
+from vartastorage.cgi_data import (
+    BattData,
+    ChargerData,
+    EMeterData,
+    EnergyData,
+    EnsData,
+    InfoData,
+    ServiceData,
+    WrData,
+)
 from vartastorage.modbus_client import ModbusClient, ModbusData
 
 CGI_ERR = "The CgiClient is not initialized. Did you set cgi=False?"
@@ -16,6 +25,16 @@ class BaseData(ModbusData):
     from_grid_power: int = 0
     charge_power: int = 0
     discharge_power: int = 0
+
+
+@dataclass
+class EmsData:
+    # /cgi/ems_datajs data
+    wr_data: WrData | None = None
+    emeter_data: EMeterData | None = None
+    ens_data: EnsData | None = None
+    charger_data: ChargerData | None = None
+    batt_data: BattData | None = None
 
 
 @dataclass
@@ -83,48 +102,7 @@ class VartaStorage:
             raise ValueError(CGI_ERR)
 
         info = self.cgi_client.get_info_cgi()
-        return InfoData(
-            device_description=info.get("Device_Description", None),
-            display_serial=info.get("Display_Serial", None),
-            sw_id_ems=info.get("SW_ID_EMS", None),
-            hw_id_ems=info.get("HW_ID_EMS", None),
-            countrycode=info.get("countrycode", None),
-            sw_version_ems=info.get("SW_Version_EMS", None),
-            anz_charger=info.get("Anz_Charger", None),
-            soll_charger=info.get("Soll_Charger", None),
-            serial_emeter=info.get("Serial_EMeter", None),
-            mac_emeter=info.get("MAC_EMeter", None),
-            sw_version_emeter=info.get("SW_Version_EMeter", None),
-            bl_version_emeter=info.get("BL_Version_EMeter", None),
-            hw_id_emeter=info.get("HW_ID_EMeter", None),
-            serial_wr=info.get("Serial_WR", None),
-            mac_wr=info.get("MAC_WR", None),
-            sw_id_wr=info.get("SW_ID_WR", None),
-            hw_id_wr=info.get("HW_ID_WR", None),
-            sw_version_wr=info.get("SW_Version_WR", None),
-            bl_version_wr=info.get("BL_Version_WR", None),
-            serial_ens=info.get("Serial_ENS", None),
-            mac_ens=info.get("MAC_ENS", None),
-            sw_id_ens=info.get("SW_ID_ENS", None),
-            hw_id_ens=info.get("HW_ID_ENS", None),
-            sw_version_ens=info.get("SW_Version_ENS", None),
-            bl_version_ens=info.get("BL_Version_ENS", None),
-            charger_serial=info.get("Charger_Serial", None),
-            charger_mac=info.get("Charger_MAC", None),
-            sw_id_charger=info.get("SW_ID_Charger", None),
-            hw_id_charger=info.get("HW_ID_Charger", None),
-            sw_version_charger=info.get("SW_Version_Charger", None),
-            bl_version_charger=info.get("BL_Version_Charger", None),
-            p_ems_max=info.get("P_EMS_Max", None),
-            p_ems_maxdisc=info.get("P_EMS_MaxDisc", None),
-            battery_sw=info.get("BatterySW", None),
-            battery_hw=info.get("BatteryHW", None),
-            battery_serial=info.get("BatterySerial", None),
-            bm_update=info.get("BM_Update", None),
-            bm_update_sw=info.get("BM_UpdateSW", None),
-            bm_production=info.get("BM_Production", None),
-            lg_battery_serial=info.get("LG_Battery_Serial", None),
-        )
+        return InfoData.from_dict(info)
 
     def get_energy_cgi(self) -> EnergyData:
         # retrieve available data points in /cgi/energy.js
@@ -132,13 +110,7 @@ class VartaStorage:
             raise ValueError(CGI_ERR)
 
         energy = self.cgi_client.get_energy_cgi()
-        return EnergyData(
-            total_grid_ac_dc=energy.get("EGrid_AC_DC", None),
-            total_grid_dc_ac=energy.get("EGrid_DC_AC", None),
-            total_inverter_ac_dc=energy.get("EWr_AC_DC", None),
-            total_inverter_dc_ac=energy.get("EWr_DC_AC", None),
-            total_charge_cycles=energy.get("Chrg_LoadCycles", None),
-        )
+        return EnergyData.from_dict(energy)
 
     def get_service_cgi(self) -> ServiceData:
         # get values from maintenance CGI
@@ -146,11 +118,7 @@ class VartaStorage:
             raise ValueError(CGI_ERR)
 
         service = self.cgi_client.get_service_cgi()
-        return ServiceData(
-            hours_until_filter_maintenance=service.get("FilterZeit", None),
-            status_fan=service.get("Fan", None),
-            status_main=service.get("Main", None),
-        )
+        return ServiceData.from_dict(service)
 
     def get_ems_cgi(self) -> EmsData:
         # get ems values
@@ -161,29 +129,14 @@ class VartaStorage:
 
         out = EmsData()
         if "wr" in ems:
-            wr = ems["wr"]
-            out.wr_data = WrData(
-                nominal_power=wr.get("PSoll", None),
-                u_verbund_l1=wr.get("U Verbund L1", None),
-                u_verbund_l2=wr.get("U Verbund L2", None),
-                u_verbund_l3=wr.get("U Verbund L3", None),
-                i_verbund_l1=wr.get("I Verbund L1", None),
-                i_verbund_l2=wr.get("I Verbund L2", None),
-                i_verbund_l3=wr.get("I Verbund L3", None),
-                u_insel_l1=wr.get("U Insel L1", None),
-                u_insel_l2=wr.get("U Insel L2", None),
-                u_insel_l3=wr.get("U Insel L3", None),
-                i_insel_l1=wr.get("I Insel L1", None),
-                i_insel_l2=wr.get("I Insel L2", None),
-                i_insel_l3=wr.get("I Insel L3", None),
-                temp_l1=wr.get("Temp L1", None),
-                temp_l2=wr.get("Temp L2", None),
-                temp_l3=wr.get("Temp L3", None),
-                temp_board=wr.get("TBoard", None),
-                frequency_grid=wr.get("FNetz", None),
-                online_status=wr.get("OnlineStatus", None),
-                fan_speed=wr.get("Luefter", None),
-            )
+            out.wr_data = WrData.from_dict(ems["wr"])
+
+        if "emeter" in ems:
+            out.emeter_data = EMeterData.from_dict(ems["emeter"])
+
+        if "ens" in ems:
+            out.ens_data = EnsData.from_dict(ems["ens"])
+
         # TODO: add more if necessary
 
         return out
