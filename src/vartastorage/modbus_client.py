@@ -31,7 +31,9 @@ class ModbusClient:
 
         self.modbus_host = modbus_host
         self.modbus_port = modbus_port
-        self._modbus_client = ModbusTcpClient(self.modbus_host, self.modbus_port)
+        self._modbus_client = ModbusTcpClient(
+            host=self.modbus_host, port=self.modbus_port, unit_id=255
+        )
 
     def connect(self) -> bool:
         return self._modbus_client.connect()
