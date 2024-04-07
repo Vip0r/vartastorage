@@ -1,3 +1,4 @@
+import time
 from dataclasses import dataclass
 
 from pymodbus.client.tcp import ModbusTcpClient
@@ -9,6 +10,8 @@ ERROR_TEMPLATE = (
     "An error occured while polling address {}. "
     + "This might be an issue with your device."
 )
+
+CACHE_TIME = 900  # 15 minutes
 
 
 @dataclass
@@ -24,6 +27,34 @@ class ModbusData:
     installed_capacity: int
     serial: str
     table_version: int
+    software_version_ems: str
+    software_version_ens: str
+    software_version_inverter: str
+
+
+@dataclass
+class CacheData:
+    timestamp_cache: int = 0
+    serial: str = ""
+    table_version: int = 0
+    software_version_ems: str = ""
+    software_version_ens: str = ""
+    software_version_inverter: str = ""
+
+    def set_data(
+        self,
+        serial: str,
+        table_version: int,
+        software_version_ems: str,
+        software_version_ens: str,
+        software_version_inverter: str,
+    ) -> None:
+        self.timestamp_cache = int(time.time())
+        self.serial = serial
+        self.table_version = table_version
+        self.software_version_ems = software_version_ems
+        self.software_version_ens = software_version_ens
+        self.software_version_inverter = software_version_inverter
 
 
 class ModbusClient:
@@ -36,6 +67,8 @@ class ModbusClient:
             host=self.modbus_host, port=self.modbus_port, unit_id=255
         )
 
+        self._cache = CacheData()
+
     def connect(self) -> bool:
         return self._modbus_client.connect()
 
@@ -46,6 +79,7 @@ class ModbusClient:
         return self._modbus_client.is_socket_open()
 
     def get_all_data_modbus(self) -> ModbusData:
+        self.update_cache()
         out = ModbusData(
             soc=self.get_soc(),
             grid_power=self.get_grid_power(),
@@ -56,10 +90,26 @@ class ModbusClient:
             number_modules=self.get_bm_installed(),
             installed_capacity=self.get_installed_capacity(),
             total_charged_energy=self.get_total_charged_energy(),
-            serial=self.get_serial(),
-            table_version=self.get_table_version(),
+            serial=self._cache.serial,
+            table_version=self._cache.table_version,
+            software_version_ems=self._cache.software_version_ems,
+            software_version_ens=self._cache.software_version_ens,
+            software_version_inverter=self._cache.software_version_inverter,
         )
         return out
+
+    def update_cache(self) -> None:
+        if int(time.time()) - self._cache.timestamp_cache < CACHE_TIME:
+            # cache is still relevant
+            return
+
+        self._cache.set_data(
+            serial=self.get_serial(),
+            table_version=self.get_table_version(),
+            software_version_ems=self.get_software_version_ems(),
+            software_version_ens=self.get_software_version_ens(),
+            software_version_inverter=self.get_software_version_inverter(),
+        )
 
     def get_software_version_ems(self) -> str:
         registers = self._get_value_modbus(1000, 17)

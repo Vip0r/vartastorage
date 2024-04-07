@@ -39,6 +39,9 @@ class BaseData(ModbusData):
             installed_capacity=modbus_data.installed_capacity,
             serial=modbus_data.serial,
             table_version=modbus_data.table_version,
+            software_version_ems=modbus_data.software_version_ems,
+            software_version_ens=modbus_data.software_version_ens,
+            software_version_inverter=modbus_data.software_version_inverter,
         )
 
 
@@ -84,7 +87,7 @@ class VartaStorage:
         return out
 
     def get_all_data_modbus(self) -> BaseData:
-        res = self.get_raw_data_modbus()
+        res = self.modbus_client.get_all_data_modbus()
 
         calc_grid_power = self._calculate_to_from_grid(res.grid_power)
         calc_charge_power = self._calculate_charge_discharge(res.active_power)
