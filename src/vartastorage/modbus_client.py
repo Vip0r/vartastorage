@@ -1,3 +1,4 @@
+import time
 from dataclasses import dataclass
 
 from pymodbus.client.tcp import ModbusTcpClient
@@ -10,19 +11,50 @@ ERROR_TEMPLATE = (
     + "This might be an issue with your device."
 )
 
+CACHE_TIME = 900  # 15 minutes
+
 
 @dataclass
 class ModbusData:
-    soc: int = 0
-    grid_power: int = 0
-    state: int = 0
-    active_power: int = 0
-    apparent_power: int = 0
-    error_code: int = 0
-    total_charged_energy: int = 0
-    number_modules: int = 0
-    installed_capacity: int = 0
+    soc: int
+    grid_power: int
+    state: int
+    active_power: int
+    apparent_power: int
+    error_code: int
+    total_charged_energy: int
+    number_modules: int
+    installed_capacity: int
+    serial: str
+    table_version: int
+    software_version_ems: str
+    software_version_ens: str
+    software_version_inverter: str
+
+
+@dataclass
+class CacheData:
+    timestamp_cache: int = 0
     serial: str = ""
+    table_version: int = 0
+    software_version_ems: str = ""
+    software_version_ens: str = ""
+    software_version_inverter: str = ""
+
+    def set_data(
+        self,
+        serial: str,
+        table_version: int,
+        software_version_ems: str,
+        software_version_ens: str,
+        software_version_inverter: str,
+    ) -> None:
+        self.timestamp_cache = int(time.time())
+        self.serial = serial
+        self.table_version = table_version
+        self.software_version_ems = software_version_ems
+        self.software_version_ens = software_version_ens
+        self.software_version_inverter = software_version_inverter
 
 
 class ModbusClient:
@@ -35,6 +67,8 @@ class ModbusClient:
             host=self.modbus_host, port=self.modbus_port, unit_id=255
         )
 
+        self._cache = CacheData()
+
     def connect(self) -> bool:
         return self._modbus_client.connect()
 
@@ -45,41 +79,82 @@ class ModbusClient:
         return self._modbus_client.is_socket_open()
 
     def get_all_data_modbus(self) -> ModbusData:
-        out = ModbusData()
-        out.soc = self.get_soc_modbus()
-        out.grid_power = self.get_grid_power_modbus()
-        out.state = self.get_state_modbus()
-        out.active_power = self.get_active_power_modbus()
-        out.apparent_power = self.get_apparent_power_modbus()
-        out.error_code = self.get_error_code_modbus()
-        out.number_modules = self.get_bm_modbus()
-        out.installed_capacity = self.get_installed_capacity_modbus()
-        out.total_charged_energy = self.get_total_charged_energy_modbus()
-        out.serial = self.get_serial_modbus()
+        self.update_cache()
+        out = ModbusData(
+            soc=self.get_soc(),
+            grid_power=self.get_grid_power(),
+            state=self.get_state(),
+            active_power=self.get_active_power(),
+            apparent_power=self.get_apparent_power(),
+            error_code=self.get_error_code(),
+            number_modules=self.get_bm_installed(),
+            installed_capacity=self.get_installed_capacity(),
+            total_charged_energy=self.get_total_charged_energy(),
+            serial=self._cache.serial,
+            table_version=self._cache.table_version,
+            software_version_ems=self._cache.software_version_ems,
+            software_version_ens=self._cache.software_version_ens,
+            software_version_inverter=self._cache.software_version_inverter,
+        )
         return out
 
-    def get_serial_modbus(self) -> str:
+    def update_cache(self) -> None:
+        if int(time.time()) - self._cache.timestamp_cache < CACHE_TIME:
+            # cache is still relevant
+            return
+
+        self._cache.set_data(
+            serial=self.get_serial(),
+            table_version=self.get_table_version(),
+            software_version_ems=self.get_software_version_ems(),
+            software_version_ens=self.get_software_version_ens(),
+            software_version_inverter=self.get_software_version_inverter(),
+        )
+
+    def get_software_version_ems(self) -> str:
+        registers = self._get_value_modbus(1000, 17)
+        result = BinaryPayloadDecoder.fromRegisters(
+            registers, Endian.BIG, Endian.BIG
+        ).decode_string(17)
+
+        return self._clean_string(result)
+
+    def get_software_version_ens(self) -> str:
+        registers = self._get_value_modbus(1017, 17)
+        result = BinaryPayloadDecoder.fromRegisters(
+            registers, Endian.BIG, Endian.BIG
+        ).decode_string(17)
+
+        return self._clean_string(result)
+
+    def get_software_version_inverter(self) -> str:
+        registers = self._get_value_modbus(1034, 17)
+        result = BinaryPayloadDecoder.fromRegisters(
+            registers, Endian.BIG, Endian.BIG
+        ).decode_string(17)
+
+        return self._clean_string(result)
+
+    def get_table_version(self) -> int:
+        registers = self._get_value_modbus(1051, 1)
+        result = BinaryPayloadDecoder.fromRegisters(
+            registers, Endian.BIG, Endian.LITTLE
+        ).decode_16bit_uint()
+        return result
+
+    def get_serial(self) -> str:
         # Retrieves the Serial Number of the device
         # Supported on VARTA element, pulse, pulse neo, link and flex storage devices
 
         registers = self._get_value_modbus(1054, 10)
 
-        result = (
-            BinaryPayloadDecoder.fromRegisters(registers, Endian.BIG, Endian.BIG)
-            .decode_string(18)
-            .decode()
-        )
+        result = BinaryPayloadDecoder.fromRegisters(
+            registers, Endian.BIG, Endian.BIG
+        ).decode_string(18)
 
-        # I know this is super wierd. But i have no idea whats here going on in the
-        # pymodbus library and i have to use this function to reformat the string
-        # correctly
-        chars = [x for x in result]
-        result_string = "".join(chars[1::2])
-        res = result_string
+        return self._clean_string(result)
 
-        return res
-
-    def get_bm_modbus(self) -> int:
+    def get_bm_installed(self) -> int:
         # Retrieves the number of battery modules installed
         # Supported on VARTA element, pulse, pulse neo, link and flex storage devices
 
@@ -89,7 +164,7 @@ class ModbusClient:
         ).decode_16bit_uint()
         return result
 
-    def get_state_modbus(self) -> int:
+    def get_state(self) -> int:
         # Retrieves the state of the device
         #  # "BUSY" (e.g. during startup) = 0/ "RUN" (ready to charge / discharge) = 1/
         # "CHARGE" = 2/ "DISCHARGE" = 3/ "STANDBY" = 4 /"ERROR" = 5 /
@@ -102,7 +177,7 @@ class ModbusClient:
         ).decode_16bit_uint()
         return result
 
-    def get_active_power_modbus(self) -> int:
+    def get_active_power(self) -> int:
         # Active Power measured at the internal inverter. Positive = Charge,
         # Negative = Discharge
         # Supported on VARTA element, pulse, pulse neo, link and flex storage devices
@@ -113,7 +188,7 @@ class ModbusClient:
         ).decode_16bit_int()
         return result
 
-    def get_apparent_power_modbus(self) -> int:
+    def get_apparent_power(self) -> int:
         # Apparent Power measured at the internal inverter. Positive = Charge,
         # Negative = Discharge
         # Supported on VARTA element, pulse, pulse neo, link and flex storage devices
@@ -124,7 +199,7 @@ class ModbusClient:
         ).decode_16bit_int()
         return result
 
-    def get_soc_modbus(self) -> int:
+    def get_soc(self) -> int:
         # Current State of Charge of the Battery Power
         # Supported on VARTA element, pulse, pulse neo, link and flex storage devices
 
@@ -134,7 +209,7 @@ class ModbusClient:
         ).decode_16bit_uint()
         return result
 
-    def get_total_charged_energy_modbus(self) -> int:
+    def get_total_charged_energy(self) -> int:
         # Total charged energy
         # Supported on VARTA element, pulse, pulse neo, link and flex storage devices
 
@@ -152,7 +227,7 @@ class ModbusClient:
         res = ((res_high << 16) | (res_low & 0xFFFF)) / 1000
         return res
 
-    def get_installed_capacity_modbus(self) -> int:
+    def get_installed_capacity(self) -> int:
         # Retrieves the total installed capacity in the device
         # Supported on VARTA element, pulse, pulse neo, link and flex storage devices
 
@@ -163,14 +238,14 @@ class ModbusClient:
         # Installed capacity has to be multiplied by 10
         return result * 10
 
-    def get_error_code_modbus(self) -> int:
+    def get_error_code(self) -> int:
         registers = self._get_value_modbus(1072, 1)
         result = BinaryPayloadDecoder.fromRegisters(
             registers, Endian.BIG, Endian.LITTLE
         ).decode_16bit_uint()
         return result
 
-    def get_grid_power_modbus(self) -> int:
+    def get_grid_power(self) -> int:
         # Retrieves the current grid power measured at household grid connection point
         # Supported on VARTA element, pulse, pulse neo, link and flex storage devices
 
@@ -195,3 +270,10 @@ class ModbusClient:
             raise ValueError(ERROR_TEMPLATE.format(address))
 
         return rr.registers
+
+    @staticmethod
+    def _clean_string(input_bytes: bytes) -> str:
+        # I know this is super wierd. But i have no idea whats here going on in the
+        # pymodbus library and i have to use this function to reformat the string
+        # correctly
+        return input_bytes[1::2].decode().replace("\x00", "")

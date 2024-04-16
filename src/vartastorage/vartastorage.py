@@ -25,6 +25,25 @@ class BaseData(ModbusData):
     charge_power: int = 0
     discharge_power: int = 0
 
+    @classmethod
+    def from_modbus_data(cls, modbus_data: ModbusData) -> "BaseData":
+        return cls(
+            soc=modbus_data.soc,
+            grid_power=modbus_data.grid_power,
+            state=modbus_data.state,
+            active_power=modbus_data.active_power,
+            apparent_power=modbus_data.apparent_power,
+            error_code=modbus_data.error_code,
+            total_charged_energy=modbus_data.total_charged_energy,
+            number_modules=modbus_data.number_modules,
+            installed_capacity=modbus_data.installed_capacity,
+            serial=modbus_data.serial,
+            table_version=modbus_data.table_version,
+            software_version_ems=modbus_data.software_version_ems,
+            software_version_ens=modbus_data.software_version_ens,
+            software_version_inverter=modbus_data.software_version_inverter,
+        )
+
 
 @dataclass
 class EmsData:
@@ -68,28 +87,18 @@ class VartaStorage:
         return out
 
     def get_all_data_modbus(self) -> BaseData:
-        res = self.get_raw_data_modbus()
+        res = self.modbus_client.get_all_data_modbus()
 
         calc_grid_power = self._calculate_to_from_grid(res.grid_power)
         calc_charge_power = self._calculate_charge_discharge(res.active_power)
 
-        return BaseData(
-            soc=res.soc,
-            grid_power=res.grid_power,
-            state=res.state,
-            active_power=res.active_power,
-            apparent_power=res.apparent_power,
-            error_code=res.error_code,
-            total_charged_energy=res.total_charged_energy,
-            number_modules=res.number_modules,
-            installed_capacity=res.installed_capacity,
-            serial=res.serial,
-            state_text=self._interpret_state(state=res.state),
-            to_grid_power=calc_grid_power[0],
-            from_grid_power=calc_grid_power[1],
-            charge_power=calc_charge_power[0],
-            discharge_power=calc_charge_power[1],
-        )
+        base_data = BaseData.from_modbus_data(res)
+        base_data.state_text = self._interpret_state(state=res.state)
+        base_data.to_grid_power = calc_grid_power[0]
+        base_data.from_grid_power = calc_grid_power[1]
+        base_data.charge_power = calc_charge_power[0]
+        base_data.discharge_power = calc_charge_power[1]
+        return base_data
 
     def get_raw_data_modbus(self) -> ModbusData:
         # get all known registers
