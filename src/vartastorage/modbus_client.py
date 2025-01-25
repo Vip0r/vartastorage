@@ -261,7 +261,7 @@ class ModbusClient:
 
         try:
             rr = self._modbus_client.read_holding_registers(
-                address, count, slave=self._slave
+                address=address, count=count, slave=self._slave
             )
         except ModbusException as exc:
             raise ValueError(ERROR_TEMPLATE.format(address)) from exc
