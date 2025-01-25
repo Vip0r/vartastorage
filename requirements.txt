@@ -1,4 +1,4 @@
-pymodbus==3.6.6
-requests==2.31.0
-ruff==0.3.3
-pre-commit==3.6.2
+pymodbus==3.8.3
+requests==2.32.3
+ruff==0.9.3
+pre-commit==4.1.0
