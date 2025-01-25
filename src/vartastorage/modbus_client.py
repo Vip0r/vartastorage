@@ -64,7 +64,7 @@ class ModbusClient:
         self.modbus_host = modbus_host
         self.modbus_port = modbus_port
         self._modbus_client = ModbusTcpClient(
-            host=self.modbus_host, port=self.modbus_port, unit_id=255
+            host=self.modbus_host, port=self.modbus_port
         )
 
         self._cache = CacheData()
