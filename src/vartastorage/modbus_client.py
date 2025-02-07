@@ -221,7 +221,7 @@ class ModbusClient:
         # Supported on VARTA element, pulse, pulse neo, link and flex storage devices
 
         registers = self._get_value_modbus(1078, 1)
-        result = ModbusTcpClient.convert_from_registers(registers,data_type=ModbusTcpClient.DATATYPE.UINT16,word_order="big")
+        result = ModbusTcpClient.convert_from_registers(registers,data_type=ModbusTcpClient.DATATYPE.INT16,word_order="big")
         return result
 
     def _get_value_modbus(self, address, count) -> list:
