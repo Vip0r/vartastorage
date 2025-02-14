@@ -107,7 +107,7 @@ class EnergyData:
             total_grid_dc_ac=energy.get("EGrid_DC_AC"),
             total_inverter_ac_dc=energy.get("EWr_AC_DC"),
             total_inverter_dc_ac=energy.get("EWr_DC_AC"),
-            total_charge_cycles=energy.get("Chrg_LoadCycles", []),
+            total_charge_cycles=energy.get("Chrg_LoadCycles", [])[0],
         )
 
 
