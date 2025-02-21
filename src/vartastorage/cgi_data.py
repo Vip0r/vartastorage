@@ -94,19 +94,19 @@ class InfoData:
 @dataclass
 class EnergyData:
     # /cgi/energy.js data
-    total_grid_ac_dc: int | None  # Wh
-    total_grid_dc_ac: int | None  # Wh
-    total_inverter_ac_dc: int | None  # Wh
-    total_inverter_dc_ac: int | None  # Wh
+    total_grid_ac_dc: int | None  # kWh
+    total_grid_dc_ac: int | None  # kWh
+    total_inverter_ac_dc: int | None  # kWh
+    total_inverter_dc_ac: int | None  # kWh
     total_charge_cycles: list[int]
 
     @classmethod
     def from_dict(cls, energy: dict) -> "EnergyData":
         return cls(
-            total_grid_ac_dc=energy.get("EGrid_AC_DC"),
-            total_grid_dc_ac=energy.get("EGrid_DC_AC"),
-            total_inverter_ac_dc=energy.get("EWr_AC_DC"),
-            total_inverter_dc_ac=energy.get("EWr_DC_AC"),
+            total_grid_ac_dc=energy.get("EGrid_AC_DC") / 1000,
+            total_grid_dc_ac=energy.get("EGrid_DC_AC") / 1000,
+            total_inverter_ac_dc=energy.get("EWr_AC_DC") / 1000,
+            total_inverter_dc_ac=energy.get("EWr_DC_AC") / 1000,
             total_charge_cycles=energy.get("Chrg_LoadCycles", [])[0],
         )
 
