@@ -138,7 +138,7 @@ class ModbusClient:
         result = ModbusTcpClient.convert_from_registers(
             registers, data_type=ModbusTcpClient.DATATYPE.UINT16, word_order="big"
         )
-        return result
+        return self._convert_value_to_int(result)
 
     def get_serial(self) -> str:
         # Retrieves the Serial Number of the device
@@ -159,7 +159,7 @@ class ModbusClient:
         result = ModbusTcpClient.convert_from_registers(
             registers, data_type=ModbusTcpClient.DATATYPE.UINT16, word_order="big"
         )
-        return result
+        return self._convert_value_to_int(result)
 
     def get_state(self) -> int:
         # Retrieves the state of the device
@@ -172,7 +172,7 @@ class ModbusClient:
         result = ModbusTcpClient.convert_from_registers(
             registers, data_type=ModbusTcpClient.DATATYPE.UINT16, word_order="big"
         )
-        return result
+        return self._convert_value_to_int(result)
 
     def get_active_power(self) -> int:
         # Active Power measured at the internal inverter. Positive = Charge,
@@ -183,7 +183,7 @@ class ModbusClient:
         result = ModbusTcpClient.convert_from_registers(
             registers, data_type=ModbusTcpClient.DATATYPE.INT16, word_order="big"
         )
-        return result
+        return self._convert_value_to_int(result)
 
     def get_apparent_power(self) -> int:
         # Apparent Power measured at the internal inverter. Positive = Charge,
@@ -194,7 +194,7 @@ class ModbusClient:
         result = ModbusTcpClient.convert_from_registers(
             registers, data_type=ModbusTcpClient.DATATYPE.INT16, word_order="big"
         )
-        return result
+        return self._convert_value_to_int(result)
 
     def get_soc(self) -> int:
         # Current State of Charge of the Battery Power
@@ -204,7 +204,7 @@ class ModbusClient:
         result = ModbusTcpClient.convert_from_registers(
             registers, data_type=ModbusTcpClient.DATATYPE.UINT16, word_order="big"
         )
-        return result
+        return self._convert_value_to_int(result)
 
     def get_total_charged_energy(self) -> int:
         # Total charged energy
@@ -220,8 +220,11 @@ class ModbusClient:
             reg_high, data_type=ModbusTcpClient.DATATYPE.UINT16, word_order="big"
         )
 
-        res = ((res_high << 16) | (res_low & 0xFFFF)) / 1000
-        return res
+        res_low_int = self._convert_value_to_int(res_low)
+        res_high_int = self._convert_value_to_int(res_high)
+
+        result = (res_high_int << 16) | (res_low_int & 0xFFFF)
+        return int(result / 1000)
 
     def get_installed_capacity(self) -> int:
         # Retrieves the total installed capacity in the device
@@ -232,14 +235,14 @@ class ModbusClient:
             registers, data_type=ModbusTcpClient.DATATYPE.UINT16, word_order="big"
         )
         # Installed capacity has to be multiplied by 10
-        return result * 10
+        return self._convert_value_to_int(result) * 10
 
     def get_error_code(self) -> int:
         registers = self._get_value_modbus(1072, 1)
         result = ModbusTcpClient.convert_from_registers(
             registers, data_type=ModbusTcpClient.DATATYPE.UINT16, word_order="big"
         )
-        return result
+        return self._convert_value_to_int(result)
 
     def get_grid_power(self) -> int:
         # Retrieves the current grid power measured at household grid connection point
@@ -249,7 +252,7 @@ class ModbusClient:
         result = ModbusTcpClient.convert_from_registers(
             registers, data_type=ModbusTcpClient.DATATYPE.INT16, word_order="big"
         )
-        return result
+        return self._convert_value_to_int(result)
 
     def _get_value_modbus(self, address, count) -> list:
         if not self._modbus_client.is_socket_open():
@@ -274,3 +277,10 @@ class ModbusClient:
         # correctly
         r = "".join(c for c in input_bytes if c.isprintable())
         return r
+
+    @staticmethod
+    def _convert_value_to_int(value: int | float | str | list) -> int:
+        if isinstance(value, list):
+            # if value is a list, return the first element or 0 if the list is empty
+            return int(value[0]) if value else 0
+        return int(value)
