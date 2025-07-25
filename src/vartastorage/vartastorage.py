@@ -66,10 +66,16 @@ class VartaStorageData:
 
 class VartaStorage:
     def __init__(
-        self, modbus_host, modbus_port, cgi=True, username=None, password=None
+        self,
+        modbus_host: str,
+        modbus_port: int = 502,
+        slave: int = 255,
+        cgi: bool = True,
+        username: str | None = None,
+        password: str | None = None,
     ):
         # connect to modbus server
-        self.modbus_client = ModbusClient(modbus_host, modbus_port)
+        self.modbus_client = ModbusClient(modbus_host, modbus_port, slave)
 
         # connect to cgi
         if cgi:
@@ -179,7 +185,7 @@ class VartaStorage:
         return (to_grid, from_grid)
 
     @staticmethod
-    def _calculate_charge_discharge(active_power) -> tuple[int, int]:
+    def _calculate_charge_discharge(active_power: int) -> tuple[int, int]:
         charge_power = 0
         discharge_power = 0
 
