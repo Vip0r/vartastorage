@@ -70,7 +70,7 @@ class ModbusClient:
         return self._modbus_client.connect()
 
     def disconnect(self) -> None:
-        return self._modbus_client.close()
+        self._modbus_client.close()
 
     def is_connected(self) -> bool:
         return self._modbus_client.is_socket_open()
