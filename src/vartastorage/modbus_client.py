@@ -13,7 +13,7 @@ CACHE_TIME = 900  # 15 minutes
 
 
 @dataclass
-class ModbusData:
+class RawData:
     soc: int
     grid_power: int
     state: int
@@ -75,9 +75,9 @@ class ModbusClient:
     def is_connected(self) -> bool:
         return self._modbus_client.is_socket_open()
 
-    def get_all_data_modbus(self) -> ModbusData:
+    def get_all_data_modbus(self) -> RawData:
         self.update_cache()
-        out = ModbusData(
+        out = RawData(
             soc=self.get_soc(),
             grid_power=self.get_grid_power(),
             state=self.get_state(),
