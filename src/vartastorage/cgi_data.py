@@ -4,6 +4,9 @@ from dataclasses import dataclass
 @dataclass
 class InfoData:
     # /cgi/info.js data
+    # TODO: Add IP (str), Netmask (str), Gateway (str), DNS (str) if needed.
+    #       There are also gridcode (int), capacity_mode (int),
+    #       P_EMS_Max (int), P_EMS_MaxDisc (int) and SW_Version_NA (list[str]) fields
     device_description: str | None
     display_serial: str | None
     sw_id_ems: int | None
@@ -18,13 +21,13 @@ class InfoData:
     bl_version_emeter: str | None
     hw_id_emeter: int | None
     serial_wr: str | None
-    mac_wr: int | None
+    mac_wr: int | None  # TODO: Check if this is correct
     sw_id_wr: int | None
     hw_id_wr: int | None
     sw_version_wr: str | None
     bl_version_wr: str | None
     serial_ens: str | None
-    mac_ens: int | None
+    mac_ens: int | None  # TODO: Check if this is correct
     sw_id_ens: int | None
     hw_id_ens: int | None
     sw_version_ens: str | None
@@ -94,20 +97,20 @@ class InfoData:
 @dataclass
 class EnergyData:
     # /cgi/energy.js data
-    total_grid_ac_dc: int | None  # kWh
-    total_grid_dc_ac: int | None  # kWh
-    total_inverter_ac_dc: int | None  # kWh
-    total_inverter_dc_ac: int | None  # kWh
-    total_charge_cycles: list[int]
+    total_grid_ac_dc: float  # kWh
+    total_grid_dc_ac: float  # kWh
+    total_inverter_ac_dc: float  # kWh
+    total_inverter_dc_ac: float  # kWh
+    total_charge_cycles: list[int]  # list of cycles per charger
 
     @classmethod
     def from_dict(cls, energy: dict) -> "EnergyData":
         return cls(
-            total_grid_ac_dc=energy.get("EGrid_AC_DC") / 1000,
-            total_grid_dc_ac=energy.get("EGrid_DC_AC") / 1000,
-            total_inverter_ac_dc=energy.get("EWr_AC_DC") / 1000,
-            total_inverter_dc_ac=energy.get("EWr_DC_AC") / 1000,
-            total_charge_cycles=energy.get("Chrg_LoadCycles", [])[0],
+            total_grid_ac_dc=energy.get("EGrid_AC_DC", 0) / 1000,
+            total_grid_dc_ac=energy.get("EGrid_DC_AC", 0) / 1000,
+            total_inverter_ac_dc=energy.get("EWr_AC_DC", 0) / 1000,
+            total_inverter_dc_ac=energy.get("EWr_DC_AC", 0) / 1000,
+            total_charge_cycles=energy.get("Chrg_LoadCycles", []),
         )
 
 
