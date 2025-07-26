@@ -1,11 +1,11 @@
-import time
 from dataclasses import dataclass
+from time import time
 
 from pymodbus.client.tcp import ModbusTcpClient
 from pymodbus.exceptions import ModbusException
 
 ERROR_TEMPLATE = (
-    "An error occured while polling address {}. "
+    "An error occurred while polling address {}. "
     + "This might be an issue with your device."
 )
 
@@ -47,7 +47,7 @@ class CacheData:
         software_version_ens: str,
         software_version_inverter: str,
     ) -> None:
-        self.timestamp_cache = int(time.time())
+        self.timestamp_cache = int(time())
         self.serial = serial
         self.table_version = table_version
         self.software_version_ems = software_version_ems
@@ -96,7 +96,7 @@ class ModbusClient:
         return out
 
     def update_cache(self) -> None:
-        if int(time.time()) - self._cache.timestamp_cache < CACHE_TIME:
+        if int(time()) - self._cache.timestamp_cache < CACHE_TIME:
             # cache is still relevant
             return
 
