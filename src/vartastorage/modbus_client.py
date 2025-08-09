@@ -2,10 +2,7 @@ import time
 from dataclasses import dataclass
 
 from pymodbus.client.tcp import ModbusTcpClient
-from pymodbus.constants import Endian
 from pymodbus.exceptions import ModbusException
-from pymodbus.payload import BinaryPayloadDecoder
-
 
 ERROR_TEMPLATE = (
     "An error occured while polling address {}. "
@@ -114,25 +111,33 @@ class ModbusClient:
 
     def get_software_version_ems(self) -> str:
         registers = self._get_value_modbus(1000, 17)
-        result = ModbusTcpClient.convert_from_registers(registers,data_type=ModbusTcpClient.DATATYPE.STRING,word_order="big")
+        result = ModbusTcpClient.convert_from_registers(
+            registers, data_type=ModbusTcpClient.DATATYPE.STRING, word_order="big"
+        )
         # Decode using UTF-16 little-endian
         return self._clean_string(result)
 
     def get_software_version_ens(self) -> str:
         registers = self._get_value_modbus(1017, 17)
-        result = ModbusTcpClient.convert_from_registers(registers,data_type=ModbusTcpClient.DATATYPE.STRING,word_order="big")
+        result = ModbusTcpClient.convert_from_registers(
+            registers, data_type=ModbusTcpClient.DATATYPE.STRING, word_order="big"
+        )
         # Decode using UTF-16 little-endian
         return self._clean_string(result)
 
     def get_software_version_inverter(self) -> str:
         registers = self._get_value_modbus(1034, 17)
-        result = ModbusTcpClient.convert_from_registers(registers,data_type=ModbusTcpClient.DATATYPE.STRING,word_order="big")
+        result = ModbusTcpClient.convert_from_registers(
+            registers, data_type=ModbusTcpClient.DATATYPE.STRING, word_order="big"
+        )
         # Decode using UTF-16 little-endian
         return self._clean_string(result)
 
     def get_table_version(self) -> int:
         registers = self._get_value_modbus(1051, 1)
-        result = ModbusTcpClient.convert_from_registers(registers,data_type=ModbusTcpClient.DATATYPE.UINT16,word_order="big")
+        result = ModbusTcpClient.convert_from_registers(
+            registers, data_type=ModbusTcpClient.DATATYPE.UINT16, word_order="big"
+        )
         return result
 
     def get_serial(self) -> str:
@@ -140,7 +145,9 @@ class ModbusClient:
         # Supported on VARTA element, pulse, pulse neo, link and flex storage devices
 
         registers = self._get_value_modbus(1054, 10)
-        result = ModbusTcpClient.convert_from_registers(registers,data_type=ModbusTcpClient.DATATYPE.STRING,word_order="big")
+        result = ModbusTcpClient.convert_from_registers(
+            registers, data_type=ModbusTcpClient.DATATYPE.STRING, word_order="big"
+        )
         # Extract only the ASCII-readable characters (digits in this case)
         return self._clean_string(result)
 
@@ -149,7 +156,9 @@ class ModbusClient:
         # Supported on VARTA element, pulse, pulse neo, link and flex storage devices
 
         registers = self._get_value_modbus(1064, 1)
-        result = ModbusTcpClient.convert_from_registers(registers,data_type=ModbusTcpClient.DATATYPE.UINT16,word_order="big")
+        result = ModbusTcpClient.convert_from_registers(
+            registers, data_type=ModbusTcpClient.DATATYPE.UINT16, word_order="big"
+        )
         return result
 
     def get_state(self) -> int:
@@ -160,7 +169,9 @@ class ModbusClient:
         # Supported on VARTA element, pulse, pulse neo, link and flex storage devices
 
         registers = self._get_value_modbus(1065, 1)
-        result = ModbusTcpClient.convert_from_registers(registers,data_type=ModbusTcpClient.DATATYPE.UINT16,word_order="big")
+        result = ModbusTcpClient.convert_from_registers(
+            registers, data_type=ModbusTcpClient.DATATYPE.UINT16, word_order="big"
+        )
         return result
 
     def get_active_power(self) -> int:
@@ -169,7 +180,9 @@ class ModbusClient:
         # Supported on VARTA element, pulse, pulse neo, link and flex storage devices
 
         registers = self._get_value_modbus(1066, 1)
-        result = ModbusTcpClient.convert_from_registers(registers,data_type=ModbusTcpClient.DATATYPE.INT16,word_order="big")
+        result = ModbusTcpClient.convert_from_registers(
+            registers, data_type=ModbusTcpClient.DATATYPE.INT16, word_order="big"
+        )
         return result
 
     def get_apparent_power(self) -> int:
@@ -178,7 +191,9 @@ class ModbusClient:
         # Supported on VARTA element, pulse, pulse neo, link and flex storage devices
 
         registers = self._get_value_modbus(1067, 1)
-        result = ModbusTcpClient.convert_from_registers(registers,data_type=ModbusTcpClient.DATATYPE.INT16,word_order="big")
+        result = ModbusTcpClient.convert_from_registers(
+            registers, data_type=ModbusTcpClient.DATATYPE.INT16, word_order="big"
+        )
         return result
 
     def get_soc(self) -> int:
@@ -186,7 +201,9 @@ class ModbusClient:
         # Supported on VARTA element, pulse, pulse neo, link and flex storage devices
 
         registers = self._get_value_modbus(1068, 1)
-        result = ModbusTcpClient.convert_from_registers(registers,data_type=ModbusTcpClient.DATATYPE.UINT16,word_order="big")
+        result = ModbusTcpClient.convert_from_registers(
+            registers, data_type=ModbusTcpClient.DATATYPE.UINT16, word_order="big"
+        )
         return result
 
     def get_total_charged_energy(self) -> int:
@@ -196,8 +213,12 @@ class ModbusClient:
         reg_low = self._get_value_modbus(1069, 1)
         reg_high = self._get_value_modbus(1070, 1)
 
-        res_low = ModbusTcpClient.convert_from_registers(reg_low,data_type=ModbusTcpClient.DATATYPE.UINT16,word_order="big")
-        res_high = ModbusTcpClient.convert_from_registers(reg_high,data_type=ModbusTcpClient.DATATYPE.UINT16,word_order="big")
+        res_low = ModbusTcpClient.convert_from_registers(
+            reg_low, data_type=ModbusTcpClient.DATATYPE.UINT16, word_order="big"
+        )
+        res_high = ModbusTcpClient.convert_from_registers(
+            reg_high, data_type=ModbusTcpClient.DATATYPE.UINT16, word_order="big"
+        )
 
         res = ((res_high << 16) | (res_low & 0xFFFF)) / 1000
         return res
@@ -207,13 +228,17 @@ class ModbusClient:
         # Supported on VARTA element, pulse, pulse neo, link and flex storage devices
 
         registers = self._get_value_modbus(1071, 1)
-        result = ModbusTcpClient.convert_from_registers(registers,data_type=ModbusTcpClient.DATATYPE.UINT16,word_order="big")
+        result = ModbusTcpClient.convert_from_registers(
+            registers, data_type=ModbusTcpClient.DATATYPE.UINT16, word_order="big"
+        )
         # Installed capacity has to be multiplied by 10
         return result * 10
 
     def get_error_code(self) -> int:
         registers = self._get_value_modbus(1072, 1)
-        result = ModbusTcpClient.convert_from_registers(registers,data_type=ModbusTcpClient.DATATYPE.UINT16,word_order="big")
+        result = ModbusTcpClient.convert_from_registers(
+            registers, data_type=ModbusTcpClient.DATATYPE.UINT16, word_order="big"
+        )
         return result
 
     def get_grid_power(self) -> int:
@@ -221,7 +246,9 @@ class ModbusClient:
         # Supported on VARTA element, pulse, pulse neo, link and flex storage devices
 
         registers = self._get_value_modbus(1078, 1)
-        result = ModbusTcpClient.convert_from_registers(registers,data_type=ModbusTcpClient.DATATYPE.INT16,word_order="big")
+        result = ModbusTcpClient.convert_from_registers(
+            registers, data_type=ModbusTcpClient.DATATYPE.INT16, word_order="big"
+        )
         return result
 
     def _get_value_modbus(self, address, count) -> list:
@@ -245,5 +272,5 @@ class ModbusClient:
         # I know this is super wierd. But i have no idea whats here going on in the
         # pymodbus library and i have to use this function to reformat the string
         # correctly
-        r = ''.join(c for c in input_bytes if c.isprintable())
+        r = "".join(c for c in input_bytes if c.isprintable())
         return r
