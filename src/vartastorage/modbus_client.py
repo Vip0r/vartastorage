@@ -57,7 +57,7 @@ class CacheData:
 
 class ModbusClient:
     def __init__(self, modbus_host: str, modbus_port: int, device_id: int) -> None:
-        self.device_id = device_id
+        self._device_id = device_id
         self.modbus_host = modbus_host
         self.modbus_port = modbus_port
         self._modbus_client = ModbusTcpClient(
