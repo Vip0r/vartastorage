@@ -57,7 +57,7 @@ class CacheData:
 
 class ModbusClient:
     def __init__(self, modbus_host, modbus_port) -> None:
-        self._slave = 255
+        self._device_id = 255
 
         self.modbus_host = modbus_host
         self.modbus_port = modbus_port
@@ -257,7 +257,7 @@ class ModbusClient:
 
         try:
             rr = self._modbus_client.read_holding_registers(
-                address=address, count=count, slave=self._slave
+                address=address, count=count, device_id=self._device_id
             )
         except ModbusException as exc:
             raise ValueError(ERROR_TEMPLATE.format(address)) from exc
