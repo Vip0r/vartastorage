@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name="vartastorage",
-    version="0.4.0",
+    version="0.4.1",
     description="VARTA Battery",
     long_description="""
         With this Python module you can read modbus registers
@@ -16,7 +16,7 @@ setuptools.setup(
     zip_safe=False,
     python_requires=">=3.11",
     install_requires=[
-        "pymodbus",
+        "pymodbus>=3.11.0",
         "requests",
     ],
 )
