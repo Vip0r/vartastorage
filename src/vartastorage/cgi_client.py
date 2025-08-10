@@ -5,7 +5,7 @@ from typing import Any
 
 from requests import Response, Session
 
-ERROR_TEMPLATE = "An error occured while polling {}. Please check your connection"
+ERROR_TEMPLATE = "An error occurred while polling {}. Please check your connection"
 
 
 @dataclass
