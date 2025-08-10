@@ -11,13 +11,13 @@ from vartastorage.cgi_data import (
     ServiceData,
     WrData,
 )
-from vartastorage.modbus_client import ModbusClient, ModbusData
+from vartastorage.modbus_client import ModbusClient, RawData
 
 CGI_ERR = "The CgiClient is not initialized. Did you set cgi=False?"
 
 
 @dataclass
-class BaseData(ModbusData):
+class ModbusData(RawData):
     # modbus interpretations
     state_text: str = ""
     to_grid_power: int = 0
@@ -26,7 +26,7 @@ class BaseData(ModbusData):
     discharge_power: int = 0
 
     @classmethod
-    def from_modbus_data(cls, modbus_data: ModbusData) -> "BaseData":
+    def from_modbus_data(cls, modbus_data: RawData) -> "ModbusData":
         return cls(
             soc=modbus_data.soc,
             grid_power=modbus_data.grid_power,
@@ -66,10 +66,16 @@ class VartaStorageData:
 
 class VartaStorage:
     def __init__(
-        self, modbus_host, modbus_port, cgi=True, username=None, password=None
+        self,
+        modbus_host: str,
+        modbus_port: int = 502,
+        device_id: int = 255,
+        cgi: bool = True,
+        username: str | None = None,
+        password: str | None = None,
     ):
         # connect to modbus server
-        self.modbus_client = ModbusClient(modbus_host, modbus_port)
+        self.modbus_client = ModbusClient(modbus_host, modbus_port, device_id)
 
         # connect to cgi
         if cgi:
@@ -86,13 +92,13 @@ class VartaStorage:
 
         return out
 
-    def get_all_data_modbus(self) -> BaseData:
+    def get_all_data_modbus(self) -> ModbusData:
         res = self.modbus_client.get_all_data_modbus()
 
         calc_grid_power = self._calculate_to_from_grid(res.grid_power)
         calc_charge_power = self._calculate_charge_discharge(res.active_power)
 
-        base_data = BaseData.from_modbus_data(res)
+        base_data = ModbusData.from_modbus_data(res)
         base_data.state_text = self._interpret_state(state=res.state)
         base_data.to_grid_power = calc_grid_power[0]
         base_data.from_grid_power = calc_grid_power[1]
@@ -100,7 +106,7 @@ class VartaStorage:
         base_data.discharge_power = calc_charge_power[1]
         return base_data
 
-    def get_raw_data_modbus(self) -> ModbusData:
+    def get_raw_data_modbus(self) -> RawData:
         # get all known registers
         return self.modbus_client.get_all_data_modbus()
 
@@ -179,7 +185,7 @@ class VartaStorage:
         return (to_grid, from_grid)
 
     @staticmethod
-    def _calculate_charge_discharge(active_power) -> tuple[int, int]:
+    def _calculate_charge_discharge(active_power: int) -> tuple[int, int]:
         charge_power = 0
         discharge_power = 0
 

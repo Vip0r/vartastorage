@@ -1,11 +1,11 @@
-import time
 from dataclasses import dataclass
+from time import time
 
 from pymodbus.client.tcp import ModbusTcpClient
 from pymodbus.exceptions import ModbusException
 
 ERROR_TEMPLATE = (
-    "An error occured while polling address {}. "
+    "An error occurred while polling address {}. "
     + "This might be an issue with your device."
 )
 
@@ -13,7 +13,7 @@ CACHE_TIME = 900  # 15 minutes
 
 
 @dataclass
-class ModbusData:
+class RawData:
     soc: int
     grid_power: int
     state: int
@@ -47,7 +47,7 @@ class CacheData:
         software_version_ens: str,
         software_version_inverter: str,
     ) -> None:
-        self.timestamp_cache = int(time.time())
+        self.timestamp_cache = int(time())
         self.serial = serial
         self.table_version = table_version
         self.software_version_ems = software_version_ems
@@ -56,9 +56,8 @@ class CacheData:
 
 
 class ModbusClient:
-    def __init__(self, modbus_host, modbus_port) -> None:
-        self._device_id = 255
-
+    def __init__(self, modbus_host: str, modbus_port: int, device_id: int) -> None:
+        self._device_id = device_id
         self.modbus_host = modbus_host
         self.modbus_port = modbus_port
         self._modbus_client = ModbusTcpClient(
@@ -71,14 +70,14 @@ class ModbusClient:
         return self._modbus_client.connect()
 
     def disconnect(self) -> None:
-        return self._modbus_client.close()
+        self._modbus_client.close()
 
     def is_connected(self) -> bool:
         return self._modbus_client.is_socket_open()
 
-    def get_all_data_modbus(self) -> ModbusData:
+    def get_all_data_modbus(self) -> RawData:
         self.update_cache()
-        out = ModbusData(
+        out = RawData(
             soc=self.get_soc(),
             grid_power=self.get_grid_power(),
             state=self.get_state(),
@@ -97,7 +96,7 @@ class ModbusClient:
         return out
 
     def update_cache(self) -> None:
-        if int(time.time()) - self._cache.timestamp_cache < CACHE_TIME:
+        if int(time()) - self._cache.timestamp_cache < CACHE_TIME:
             # cache is still relevant
             return
 
@@ -138,7 +137,7 @@ class ModbusClient:
         result = ModbusTcpClient.convert_from_registers(
             registers, data_type=ModbusTcpClient.DATATYPE.UINT16, word_order="big"
         )
-        return result
+        return self._convert_value_to_int(result)
 
     def get_serial(self) -> str:
         # Retrieves the Serial Number of the device
@@ -159,7 +158,7 @@ class ModbusClient:
         result = ModbusTcpClient.convert_from_registers(
             registers, data_type=ModbusTcpClient.DATATYPE.UINT16, word_order="big"
         )
-        return result
+        return self._convert_value_to_int(result)
 
     def get_state(self) -> int:
         # Retrieves the state of the device
@@ -172,7 +171,7 @@ class ModbusClient:
         result = ModbusTcpClient.convert_from_registers(
             registers, data_type=ModbusTcpClient.DATATYPE.UINT16, word_order="big"
         )
-        return result
+        return self._convert_value_to_int(result)
 
     def get_active_power(self) -> int:
         # Active Power measured at the internal inverter. Positive = Charge,
@@ -183,7 +182,7 @@ class ModbusClient:
         result = ModbusTcpClient.convert_from_registers(
             registers, data_type=ModbusTcpClient.DATATYPE.INT16, word_order="big"
         )
-        return result
+        return self._convert_value_to_int(result)
 
     def get_apparent_power(self) -> int:
         # Apparent Power measured at the internal inverter. Positive = Charge,
@@ -194,7 +193,7 @@ class ModbusClient:
         result = ModbusTcpClient.convert_from_registers(
             registers, data_type=ModbusTcpClient.DATATYPE.INT16, word_order="big"
         )
-        return result
+        return self._convert_value_to_int(result)
 
     def get_soc(self) -> int:
         # Current State of Charge of the Battery Power
@@ -204,7 +203,7 @@ class ModbusClient:
         result = ModbusTcpClient.convert_from_registers(
             registers, data_type=ModbusTcpClient.DATATYPE.UINT16, word_order="big"
         )
-        return result
+        return self._convert_value_to_int(result)
 
     def get_total_charged_energy(self) -> int:
         # Total charged energy
@@ -220,8 +219,11 @@ class ModbusClient:
             reg_high, data_type=ModbusTcpClient.DATATYPE.UINT16, word_order="big"
         )
 
-        res = ((res_high << 16) | (res_low & 0xFFFF)) / 1000
-        return res
+        res_low_int = self._convert_value_to_int(res_low)
+        res_high_int = self._convert_value_to_int(res_high)
+
+        result = (res_high_int << 16) | (res_low_int & 0xFFFF)
+        return int(result / 1000)
 
     def get_installed_capacity(self) -> int:
         # Retrieves the total installed capacity in the device
@@ -232,14 +234,14 @@ class ModbusClient:
             registers, data_type=ModbusTcpClient.DATATYPE.UINT16, word_order="big"
         )
         # Installed capacity has to be multiplied by 10
-        return result * 10
+        return self._convert_value_to_int(result) * 10
 
     def get_error_code(self) -> int:
         registers = self._get_value_modbus(1072, 1)
         result = ModbusTcpClient.convert_from_registers(
             registers, data_type=ModbusTcpClient.DATATYPE.UINT16, word_order="big"
         )
-        return result
+        return self._convert_value_to_int(result)
 
     def get_grid_power(self) -> int:
         # Retrieves the current grid power measured at household grid connection point
@@ -249,7 +251,7 @@ class ModbusClient:
         result = ModbusTcpClient.convert_from_registers(
             registers, data_type=ModbusTcpClient.DATATYPE.INT16, word_order="big"
         )
-        return result
+        return self._convert_value_to_int(result)
 
     def _get_value_modbus(self, address, count) -> list:
         if not self._modbus_client.is_socket_open():
@@ -274,3 +276,10 @@ class ModbusClient:
         # correctly
         r = "".join(c for c in input_bytes if c.isprintable())
         return r
+
+    @staticmethod
+    def _convert_value_to_int(value: int | float | str | list) -> int:
+        if isinstance(value, list):
+            # if value is a list, return the first element or 0 if the list is empty
+            return int(value[0]) if value else 0
+        return int(value)
