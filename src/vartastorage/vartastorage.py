@@ -69,13 +69,12 @@ class VartaStorage:
         self,
         modbus_host: str,
         modbus_port: int = 502,
-        device_id: int = 255,
         cgi: bool = True,
         username: str | None = None,
         password: str | None = None,
     ):
         # connect to modbus server
-        self.modbus_client = ModbusClient(modbus_host, modbus_port, device_id)
+        self.modbus_client = ModbusClient(modbus_host, modbus_port)
 
         # connect to cgi
         if cgi:
