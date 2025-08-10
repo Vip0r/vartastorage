@@ -1,0 +1,8 @@
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    # set the pr-limit to 99 to see all updates at once
+    open-pull-requests-limit: 99
