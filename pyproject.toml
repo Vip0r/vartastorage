@@ -1,0 +1,53 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vartastorage"
+description = "With this Python module you can read modbus registers and xml/cgi api values from various VARTA batteries."
+keywords = ["varta", "battery", "modbus"]
+readme = "README.md"
+version = "0.4.2"
+authors = [
+    { name = "edAndy", email = "an-dy@gmx.de" }
+]
+requires-python = ">=3.11"
+license = "Apache-2.0"
+license-files = ["LICEN[CS]E*"]
+urls.homepage = "http://github.com/vip0r/vartastorage"
+classifiers = [
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+
+[project.optional-dependencies]
+cgi = [
+    "requests (>=2.32.4,<3)",
+]
+modbus = [
+    "pymodbus (>=3.11,<3.12)",  # pymodbus does not use semantic versioning
+]
+
+[dependency-groups]
+dev = [
+    "ruff >=0.12.8",
+    "pre-commit (>=4.3,<5)",
+    "types-requests>=2.32.4.20250809",
+]
+
+[tool.ruff]
+line-length = 88
+indent-width = 4
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "UP", "A", "S", "B", "SIM", "I"]
+ignore = []
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+packages = ["vartastorage"]
+zip-safe = false
