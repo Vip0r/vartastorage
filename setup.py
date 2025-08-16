@@ -16,7 +16,7 @@ setuptools.setup(
     zip_safe=False,
     python_requires=">=3.11",
     install_requires=[
-        "pymodbus>=3.11.0",
+        "pymodbus>=3.9.2",
         "requests",
     ],
 )
